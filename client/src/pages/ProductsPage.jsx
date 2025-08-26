@@ -1,104 +1,127 @@
-import React, { useState } from 'react'
-import { useParams } from 'react-router-dom'
+import React, { useEffect, useState } from 'react'
+import { useParams, useLocation } from 'react-router-dom'
 import NavBar from '../components/Common/NavBar'
 import ProductCard from '../components/Products/ProductCard'
 import { useCart } from '../context/CartContext'
+import { useAuth } from '../context/AuthContext'
 
 
-const sampleProducts = {
-  men: [
-    {
-      id: 1,
-      name: "Classic Oxford Shirt",
-      category: "Signature Collection",
-      price: 89,
-      originalPrice: 120,
-      image: "https://i.pinimg.com/736x/de/dd/3d/dedd3d8f3ec58659e569f95cbdcb027f.jpg",
-      isNew: true,
-      isTrending: false,
-      colors: ['white', 'navy', 'black'],
-      rating: 4.6,
-      reviews: 124
-    },
-    {
-      id: 2,
-      name: "Slim Fit Chino Pants",
-      category: "Summer Collection",
-      price: 65,
-      originalPrice: null,
-      image: "https://images.pexels.com/photos/1972115/pexels-photo-1972115.jpeg",
-      isNew: false,
-      isTrending: true,
-      colors: ['navy', 'black', 'gray'],
-      rating: 4.2,
-      reviews: 89
-    },
-    {
-      id: 3,
-      name: "Premium Wool Blazer",
-      category: "Signature Series",
-      price: 299,
-      originalPrice: 399,
-      image: "https://images.pexels.com/photos/2897883/pexels-photo-2897883.jpeg",
-      isNew: false,
-      isTrending: false,
-      colors: ['black', 'navy', 'gray'],
-      rating: 4.8,
-      reviews: 57
+const useProducts = (category, gender) => {
+  const [data, setData] = useState([])
+  const [loading, setLoading] = useState(true)
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true)
+      try {
+        const params = new URLSearchParams()
+        if (category) params.set('category', category)
+        if (gender && gender !== 'all') params.set('gender', gender)
+        const res = await fetch(`/api/products?${params.toString()}`)
+        const json = await res.json()
+        setData(json?.data?.products || [])
+      } catch {
+        setData([])
+      } finally {
+        setLoading(false)
+      }
     }
-  ],
-  women: [
-    {
-      id: 7,
-      name: "Silk Blend Blouse",
-      category: "Signature Collection",
-      price: 129,
-      originalPrice: 169,
-      image: "https://images.pexels.com/photos/19064121/pexels-photo-19064121.jpeg",
-      isNew: true,
-      isTrending: true,
-      colors: ['white', 'black', 'navy'],
-      rating: 4.7,
-      reviews: 203
-    },
-    {
-      id: 8,
-      name: "High-Waist Tailored Pants",
-      category: "Summer Collection",
-      price: 89,
-      originalPrice: null,
-      image: "https://images.pexels.com/photos/19064121/pexels-photo-19064121.jpeg",
-      isNew: false,
-      isTrending: true,
-      colors: ['black', 'navy', 'gray'],
-      rating: 4.3,
-      reviews: 96
-    },
-    {
-      id: 9,
-      name: "Elegant Midi Dress",
-      category: "Signature Series",
-      price: 199,
-      originalPrice: 259,
-      image: "https://images.pexels.com/photos/19064121/pexels-photo-19064121.jpeg",
-      isNew: true,
-      isTrending: false,
-      colors: ['black', 'navy', 'red'],
-      rating: 4.9,
-      reviews: 311
-    }
-  ]
+    load()
+  }, [category, gender])
+  return { data, loading }
 }
 
 const ProductsPage = () => {
   const { addItem } = useCart()
+  const { user } = useAuth()
   const { category } = useParams()
+  const location = useLocation()
+  
+  // Extract gender from URL path
+  const getGenderFromPath = () => {
+    const path = location.pathname
+    if (path === '/men') return 'men'
+    if (path === '/women') return 'women'
+    if (path === '/unisex') return 'unisex'
+    return 'all'
+  }
+  
   const [isFilterOpen, setIsFilterOpen] = useState(false)
   const [quickViewProduct, setQuickViewProduct] = useState(null)
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false)
+  const [query, setQuery] = useState('')
+  const [selectedPrices, setSelectedPrices] = useState([]) // ['under-50','50-100','100-200','200-plus']
+  const [selectedCollections, setSelectedCollections] = useState([]) // ['new','trending','summer','signature']
+  const [sortBy, setSortBy] = useState('Featured')
+  const [selectedGender, setSelectedGender] = useState(getGenderFromPath()) // 'all', 'men', 'women', 'unisex'
   
-  // Get products for the current category
-  const products = sampleProducts[category] || []
+  const { data: products } = useProducts(category, selectedGender)
+  
+  // Update selectedGender when URL changes
+  useEffect(() => {
+    setSelectedGender(getGenderFromPath())
+  }, [location.pathname])
+  
+  const toggleArrayValue = (arr, value) => (
+    arr.includes(value) ? arr.filter((v) => v !== value) : [...arr, value]
+  )
+  
+  const handlePriceToggle = (value) => setSelectedPrices((prev) => toggleArrayValue(prev, value))
+  const handleCollectionToggle = (value) => setSelectedCollections((prev) => toggleArrayValue(prev, value))
+  const clearFilters = () => {
+    setQuery('')
+    setSelectedPrices([])
+    setSelectedCollections([])
+    setSortBy('Featured')
+    setSelectedGender(getGenderFromPath()) // Reset to URL-based gender
+  }
+  
+  const withinPrice = (price, range) => {
+    if (range === 'under-50') return price < 500
+    if (range === '50-100') return price >= 500 && price <= 1000
+    if (range === '100-200') return price >= 1000 && price <= 2000
+    if (range === '200-plus') return price > 2000
+    return true
+  }
+  
+  const matchesCollections = (p) => {
+    if (selectedCollections.length === 0) return true
+    return selectedCollections.every((c) => {
+      if (c === 'new') return !!p.isNew
+      if (c === 'trending') return !!p.isTrending
+      if (c === 'summer') return (p.category || '').toLowerCase().includes('summer')
+      if (c === 'signature') return (p.category || '').toLowerCase().includes('signature')
+      return true
+    })
+  }
+  
+  const filteredProducts = products
+    .filter((p) => {
+      const q = query.trim().toLowerCase()
+      if (!q) return true
+      return (
+        (p.name || '').toLowerCase().includes(q) ||
+        (p.category || '').toLowerCase().includes(q)
+      )
+    })
+    .filter((p) => {
+      if (selectedPrices.length === 0) return true
+      const price = Number(p.price) || 0
+      return selectedPrices.some((range) => withinPrice(price, range))
+    })
+    .filter(matchesCollections)
+    .filter((p) => {
+      if (selectedGender === 'all') return true
+      return p.gender === selectedGender || p.gender === 'unisex'
+    })
+
+  const sortedProducts = (() => {
+    const arr = [...filteredProducts]
+    if (sortBy === 'Price: Low to High') arr.sort((a, b) => (a.price || 0) - (b.price || 0))
+    else if (sortBy === 'Price: High to Low') arr.sort((a, b) => (b.price || 0) - (a.price || 0))
+    else if (sortBy === 'Newest First') arr.sort((a, b) => (b.isNew === true) - (a.isNew === true) || (b.id || 0) - (a.id || 0))
+    else if (sortBy === 'Best Selling') arr.sort((a, b) => (b.reviews || 0) - (a.reviews || 0))
+    return arr
+  })()
   
   const openQuickView = (product) => {
     setQuickViewProduct(product)
@@ -108,6 +131,15 @@ const ProductsPage = () => {
   const closeQuickView = () => {
     setIsQuickViewOpen(false)
     setQuickViewProduct(null)
+  }
+  
+  // Get page title based on gender
+  const getPageTitle = () => {
+    const gender = getGenderFromPath()
+    if (gender === 'men') return 'Men'
+    if (gender === 'women') return 'Women'
+    if (gender === 'unisex') return 'Unisex'
+    return category || 'Products'
   }
   
   return (
@@ -121,11 +153,11 @@ const ProductsPage = () => {
           <div className="text-center py-12">
             <div className="inline-block">
               <h1 className="text-5xl md:text-7xl font-serif text-gray-900 uppercase tracking-[0.2em] mb-4">
-                {category}
+                {getPageTitle()}
               </h1>
               <div className="w-24 h-px bg-gradient-to-r from-transparent via-gray-900 to-transparent mx-auto mb-6"></div>
               <p className="text-lg text-gray-600 font-light tracking-wide">
-                Curated collection for the modern {category}
+                Curated collection for the modern {getPageTitle().toLowerCase()}
               </p>
             </div>
           </div>
@@ -167,7 +199,9 @@ const ProductsPage = () => {
                   <input
                     type="text"
                     placeholder="Find your style..."
-                    className="w-full px-4 py-3 bg-gray-50 border-0 rounded-none focus:bg-white focus:ring-2 focus:ring-gray-900 focus:outline-none transition-all duration-200 text-gray-900 placeholder-gray-500 hover:bg-white"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    className="w-full px-4 py-3 bg-gray-50 border-0 rounded-none focus:bg_white focus:ring-2 focus:ring-gray-900 focus:outline-none transition-all duration-200 text-gray-900 placeholder-gray-500 hover:bg-white"
                   />
                   <svg className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -181,17 +215,19 @@ const ProductsPage = () => {
                   Price Range
                 </h3>
                 <div className="space-y-4">
-                  {[
-                    { label: 'Under $50', value: 'under-50' },
-                    { label: '$50 - $100', value: '50-100' },
-                    { label: '$100 - $200', value: '100-200' },
-                    { label: 'Premium ($200+)', value: '200-plus' }
+                  {[ 
+                    { label: 'Under Rs. 500', value: 'under-50' },
+                    { label: 'Rs. 500 - Rs. 1000', value: '50-100' },
+                    { label: 'Rs. 1000 - Rs. 2000', value: '100-200' },
+                    { label: 'Premium (Rs. 2000+)', value: '200-plus' }
                   ].map((price) => (
                     <label key={price.value} className="flex items-center group cursor-pointer">
                       <div className="relative">
                         <input 
                           type="checkbox" 
                           className="sr-only peer" 
+                          checked={selectedPrices.includes(price.value)}
+                          onChange={() => handlePriceToggle(price.value)}
                         />
                         <div className="w-5 h-5 border-2 border-gray-300 peer-checked:border-gray-900 peer-checked:bg-gray-900 transition-all duration-200 relative">
                           <svg className="w-3 h-3 text-white absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-0 peer-checked:opacity-100" fill="currentColor" viewBox="0 0 20 20">
@@ -207,13 +243,46 @@ const ProductsPage = () => {
                 </div>
               </div>
 
+              {/* Gender Filter */}
+              <div className="pb-6 border-b border-gray-100">
+                <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-6">
+                  Gender
+                </h3>
+                <div className="space-y-4">
+                  {[
+                    { label: 'All Genders', value: 'all' },
+                    { label: 'Men', value: 'men' },
+                    { label: 'Women', value: 'women' },
+                    { label: 'Unisex Only', value: 'unisex' }
+                  ].map((gender) => (
+                    <label key={gender.value} className="flex items-center group cursor-pointer">
+                      <div className="relative">
+                        <input 
+                          type="radio" 
+                          name="gender"
+                          className="sr-only peer" 
+                          checked={selectedGender === gender.value}
+                          onChange={() => setSelectedGender(gender.value)}
+                        />
+                        <div className="w-5 h-5 border-2 border-gray-300 peer-checked:border-gray-900 peer-checked:bg-gray-900 transition-all duration-200 relative rounded-full">
+                          <div className="w-2 h-2 bg-white rounded-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-0 peer-checked:opacity-100"></div>
+                        </div>
+                      </div>
+                      <span className="ml-3 text-gray-700 group-hover:text-gray-900 transition-colors font-medium">
+                        {gender.label}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
               {/* Collections */}
               <div className="pb-6 border-b border-gray-100">
                 <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-6">
                   Collections
                 </h3>
                 <div className="space-y-4">
-                  {[
+                  {[ 
                     { label: 'New Arrivals', value: 'new', count: 24 },
                     { label: 'Trending', value: 'trending', count: 18 },
                     { label: 'Summer Collection', value: 'summer', count: 32 },
@@ -225,6 +294,8 @@ const ProductsPage = () => {
                           <input 
                             type="checkbox" 
                             className="sr-only peer" 
+                            checked={selectedCollections.includes(collection.value)}
+                            onChange={() => handleCollectionToggle(collection.value)}
                           />
                           <div className="w-5 h-5 border-2 border-gray-300 peer-checked:border-gray-900 peer-checked:bg-gray-900 transition-all duration-200 relative">
                             <svg className="w-3 h-3 text-white absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-0 peer-checked:opacity-100" fill="currentColor" viewBox="0 0 20 20">
@@ -243,7 +314,7 @@ const ProductsPage = () => {
               </div>
 
               {/* Clear Filters */}
-              <button className="text-gray-600 hover:text-gray-900 transition-colors font-medium text-sm uppercase tracking-wider">
+              <button onClick={clearFilters} className="text-gray-600 hover:text-gray-900 transition-colors font-medium text-sm uppercase tracking-wider">
                 Clear All Filters
               </button>
             </div>
@@ -256,12 +327,16 @@ const ProductsPage = () => {
             <div className="flex justify-between items-center mb-8 pb-6 border-b border-gray-100">
               <div>
                 <p className="text-gray-600 font-medium">
-                  Showing <span className="text-gray-900">1-{products.length}</span> of <span className="text-gray-900">{products.length}</span> products
+                  Showing <span className="text-gray-900">{sortedProducts.length}</span> of <span className="text-gray-900">{products.length}</span> products
                 </p>
               </div>
               <div className="flex items-center gap-4">
                 <span className="text-sm text-gray-600 font-medium">Sort by:</span>
-                <select className="bg-white border border-gray-200 px-4 py-2 text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent">
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="bg-white border border-gray-200 px-4 py-2 text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                >
                   <option>Featured</option>
                   <option>Price: Low to High</option>
                   <option>Price: High to Low</option>
@@ -273,14 +348,20 @@ const ProductsPage = () => {
 
             {/* Premium Products Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {products.map((product) => (
+              {sortedProducts.map((product) => (
                 <ProductCard
-                  key={product.id}
+                  key={product._id}
                   product={product}
                   rating={product.rating}
                   reviews={product.reviews}
                   onQuickView={() => openQuickView(product)}
-                  onAddToCart={() => addItem(product, 1)}
+                  onAddToCart={() => {
+                    if (!user) {
+                      window.location.href = '/login'
+                      return
+                    }
+                    addItem(product, 1)
+                  }}
                 />
               ))}
               
@@ -320,16 +401,22 @@ const ProductsPage = () => {
               <p className="text-xs uppercase tracking-wider text-gray-500">{quickViewProduct.category}</p>
               <h3 className="mt-1 text-xl font-semibold text-gray-900">{quickViewProduct.name}</h3>
               <div className="mt-3 flex items-end gap-2">
-                <span className="text-lg font-bold text-gray-900">${quickViewProduct.price.toFixed(2)}</span>
+                <span className="text-lg font-bold text-gray-900">Rs. {quickViewProduct.price.toFixed(2)}</span>
                 {typeof quickViewProduct.originalPrice === 'number' && (
-                  <del className="text-sm text-gray-400">${quickViewProduct.originalPrice.toFixed(2)}</del>
+                  <del className="text-sm text-gray-400">Rs. {quickViewProduct.originalPrice.toFixed(2)}</del>
                 )}
               </div>
               <div className="mt-6 flex gap-3">
                 <button
                   type="button"
                   className="inline-flex flex-1 items-center justify-center rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-black"
-                  onClick={() => addItem(quickViewProduct, 1)}
+                  onClick={() => {
+                    if (!user) {
+                      window.location.href = '/login'
+                      return
+                    }
+                    addItem(quickViewProduct, 1)
+                  }}
                 >
                   Add to cart
                 </button>

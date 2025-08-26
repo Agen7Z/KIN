@@ -2,27 +2,49 @@ import React from 'react'
 import { Link } from 'react-router-dom'
 import { HiOutlineUser, HiOutlineShoppingCart } from 'react-icons/hi'
 import { useCart } from '../../context/CartContext'
+import { useAuth } from '../../context/AuthContext'
 
 const NavBar = () => {
   const { count, toggle } = useCart()
+  const { user, logout } = useAuth()
   return (
     <nav className="fixed top-0 left-0 w-full z-20">
       <div className="flex justify-between items-center py-4 px-8 bg-transparent">
         
        
-        <div>
+        <div className="flex items-center gap-8">
           <Link to="/" className="text-2xl font-bold text-black">
             KINN
           </Link>
+          
+          {/* Navigation Links */}
+          <div className="hidden md:flex items-center gap-6">
+            <Link to="/men" className="text-gray-700 hover:text-black transition-colors font-medium">
+              Men
+            </Link>
+            <Link to="/women" className="text-gray-700 hover:text-black transition-colors font-medium">
+              Women
+            </Link>
+            <Link to="/unisex" className="text-gray-700 hover:text-black transition-colors font-medium">
+              Unisex
+            </Link>
+          </div>
         </div>
 
         
         <div className="flex items-center gap-6 text-[20px]">
           <Link
-            to="/profile"
+            to={user ? '/profile' : '/login'}
             className="text-black hover:text-gray-700 transition-all duration-300"
+            aria-label="Account"
           >
-            <HiOutlineUser />
+            {user ? (
+              <span className="text-sm font-medium">
+                {user.username?.slice(0, 7) || user.name?.slice(0, 7) || 'User'}
+              </span>
+            ) : (
+              <HiOutlineUser />
+            )}
           </Link>
           <button onClick={toggle} className="text-black hover:text-gray-700 transition-all duration-300 relative">
             <HiOutlineShoppingCart />

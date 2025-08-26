@@ -32,8 +32,8 @@ const ProductCard = ({
   const isNew = product?.isNew
   const isTrending = product?.isTrending
 
-  const formattedPrice = typeof cardPrice === 'number' ? `$${cardPrice.toFixed(2)}` : cardPrice
-  const formattedOriginal = typeof cardOriginal === 'number' ? `$${cardOriginal.toFixed(2)}` : cardOriginal
+  const formattedPrice = typeof cardPrice === 'number' ? `Rs. ${cardPrice.toFixed(2)}` : cardPrice
+  const formattedOriginal = typeof cardOriginal === 'number' ? `Rs. ${cardOriginal.toFixed(2)}` : cardOriginal
   const discount =
     typeof cardPrice === 'number' && typeof cardOriginal === 'number'
       ? Math.max(0, Math.round(((cardOriginal - cardPrice) / cardOriginal) * 100))
@@ -91,9 +91,21 @@ const ProductCard = ({
       </div>
 
       <div className="space-y-2 p-4">
-        {cardCategory ? (
-          <p className="text-xs uppercase tracking-wider text-gray-500">{cardCategory}</p>
-        ) : null}
+        <div className="flex items-center gap-2">
+          {cardCategory ? (
+            <p className="text-xs uppercase tracking-wider text-gray-500">{cardCategory}</p>
+          ) : null}
+          {product?.gender && (
+            <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+              product.gender === 'men' ? 'bg-blue-100 text-blue-800' :
+              product.gender === 'women' ? 'bg-pink-100 text-pink-800' :
+              'bg-purple-100 text-purple-800'
+            }`}>
+              {product.gender === 'unisex' ? 'Unisex' : 
+               product.gender === 'men' ? 'Men' : 'Women'}
+            </span>
+          )}
+        </div>
 
         <h3 className="line-clamp-1 text-base font-semibold tracking-tight text-gray-900">
           <Link to={`/product/${product?.id || ''}`} state={{ product }} className="hover:underline">
