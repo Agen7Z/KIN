@@ -39,9 +39,9 @@ const ProductsPage = () => {
   // Extract gender from URL path
   const getGenderFromPath = () => {
     const path = location.pathname
-    if (path === '/men') return 'men'
-    if (path === '/women') return 'women'
-    if (path === '/unisex') return 'unisex'
+    if (path === '/men' || path === '/products/men') return 'men'
+    if (path === '/women' || path === '/products/women') return 'women'
+    if (path === '/unisex' || path === '/products/unisex') return 'unisex'
     return 'all'
   }
   
@@ -243,38 +243,7 @@ const ProductsPage = () => {
                 </div>
               </div>
 
-              {/* Gender Filter */}
-              <div className="pb-6 border-b border-gray-100">
-                <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-6">
-                  Gender
-                </h3>
-                <div className="space-y-4">
-                  {[
-                    { label: 'All Genders', value: 'all' },
-                    { label: 'Men', value: 'men' },
-                    { label: 'Women', value: 'women' },
-                    { label: 'Unisex Only', value: 'unisex' }
-                  ].map((gender) => (
-                    <label key={gender.value} className="flex items-center group cursor-pointer">
-                      <div className="relative">
-                        <input 
-                          type="radio" 
-                          name="gender"
-                          className="sr-only peer" 
-                          checked={selectedGender === gender.value}
-                          onChange={() => setSelectedGender(gender.value)}
-                        />
-                        <div className="w-5 h-5 border-2 border-gray-300 peer-checked:border-gray-900 peer-checked:bg-gray-900 transition-all duration-200 relative rounded-full">
-                          <div className="w-2 h-2 bg-white rounded-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-0 peer-checked:opacity-100"></div>
-                        </div>
-                      </div>
-                      <span className="ml-3 text-gray-700 group-hover:text-gray-900 transition-colors font-medium">
-                        {gender.label}
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              </div>
+              {/* Gender Filter removed as per requirement */}
 
               {/* Collections */}
               <div className="pb-6 border-b border-gray-100">
@@ -391,9 +360,9 @@ const ProductsPage = () => {
           <div className="flex">
             <div className="w-1/2 bg-gray-50">
               <img
-                src={quickViewProduct.image}
+                src={(quickViewProduct.images && quickViewProduct.images[0]) || quickViewProduct.image}
                 alt={quickViewProduct.name}
-                className="h-full w-full object-cover"
+                className="h-full w-full object-contain bg-white"
                 loading="lazy"
               />
             </div>

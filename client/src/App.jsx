@@ -2,6 +2,7 @@ import React from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext.jsx'
 import { CartProvider } from './context/CartContext.jsx'
+import { ToastProvider } from './context/ToastContext.jsx'
 
 import Home from './pages/Home'
 import ProductsPage from './pages/ProductsPage'
@@ -17,6 +18,7 @@ const App = () => {
     <BrowserRouter>
       <AuthProvider>
         <CartProvider>
+          <ToastProvider>
           <Routes>
             <Route path='/' element={<Home />} />
             <Route path='/products/:category' element={<ProductsPage />} />
@@ -30,6 +32,7 @@ const App = () => {
             <Route path='/admin' element={<AdminDashboard />} />
           </Routes>
           <CartDrawer />
+          </ToastProvider>
         </CartProvider>
       </AuthProvider>
     </BrowserRouter>

@@ -24,7 +24,7 @@ const ProductCard = ({
   onAddToCart,
   onQuickView,
 }) => {
-  const cardImage = product?.image ?? image
+  const cardImage = (product?.images && product.images[0]) ?? product?.image ?? image
   const cardTitle = product?.name ?? title
   const cardCategory = product?.category ?? category
   const cardPrice = product?.price ?? price
@@ -44,7 +44,7 @@ const ProductCard = ({
       <div className="absolute inset-0 rounded-2xl p-[1px] bg-gradient-to-br from-white/60 via-white/20 to-transparent pointer-events-none" />
       <div className="relative aspect-[4/3] w-full overflow-hidden bg-gray-50">
         {cardImage ? (
-          <Link to={`/product/${product?.id || ''}`} state={{ product }}>
+          <Link to={`/product/${product?.slug || product?._id || product?.id || ''}`} state={{ product }}>
             <img
               src={cardImage}
               alt={cardTitle}
@@ -108,7 +108,7 @@ const ProductCard = ({
         </div>
 
         <h3 className="line-clamp-1 text-base font-semibold tracking-tight text-gray-900">
-          <Link to={`/product/${product?.id || ''}`} state={{ product }} className="hover:underline">
+          <Link to={`/product/${product?.slug || product?._id || product?.id || ''}`} state={{ product }} className="hover:underline">
             {cardTitle}
           </Link>
         </h3>

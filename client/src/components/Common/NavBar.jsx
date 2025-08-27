@@ -17,24 +17,13 @@ const NavBar = () => {
             KINN
           </Link>
           
-          {/* Navigation Links */}
-          <div className="hidden md:flex items-center gap-6">
-            <Link to="/men" className="text-gray-700 hover:text-black transition-colors font-medium">
-              Men
-            </Link>
-            <Link to="/women" className="text-gray-700 hover:text-black transition-colors font-medium">
-              Women
-            </Link>
-            <Link to="/unisex" className="text-gray-700 hover:text-black transition-colors font-medium">
-              Unisex
-            </Link>
-          </div>
+          {/* Navigation Links removed as per requirement */}
         </div>
 
         
         <div className="flex items-center gap-6 text-[20px]">
           <Link
-            to={user ? '/profile' : '/login'}
+            to={user ? (user.role === 'admin' ? '/admin' : '/profile') : '/login'}
             className="text-black hover:text-gray-700 transition-all duration-300"
             aria-label="Account"
           >

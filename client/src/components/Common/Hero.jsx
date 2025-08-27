@@ -17,7 +17,7 @@ const Hero = () => {
           <span className="block text-black text-3xl font-bold uppercase tracking-widest group-hover:text-white transition-colors duration-300">
             Men
           </span>
-          <Link to="/products/men" className="mt-3 px-6 py-2 bg-black text-white font-medium uppercase tracking-wide rounded-lg shadow hover:bg-white hover:text-black transition-all duration-300 hover:shadow-lg">
+          <Link to="/men" className="mt-3 px-6 py-2 bg-black text-white font-medium uppercase tracking-wide rounded-lg shadow hover:bg-white hover:text-black transition-all duration-300 hover:shadow-lg">
             Try Wears
           </Link>
         </div>
@@ -36,7 +36,7 @@ const Hero = () => {
           <span className="block text-red-500 text-3xl font-bold uppercase tracking-widest group-hover:text-white transition-colors duration-300">
             Women
           </span>
-          <Link to="/products/women" className="mt-3 px-6 py-2 bg-red-500 text-white font-medium uppercase tracking-wide rounded-lg shadow hover:bg-white hover:text-black transition-all duration-300 hover:shadow-lg">
+          <Link to="/women" className="mt-3 px-6 py-2 bg-red-500 text-white font-medium uppercase tracking-wide rounded-lg shadow hover:bg-white hover:text-black transition-all duration-300 hover:shadow-lg">
             Try Wears
           </Link>
         </div>

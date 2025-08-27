@@ -48,25 +48,6 @@ const Home = () => {
     <>
       <NavBar />
       <Hero />
-      
-      {/* Gender-based Product Sections */}
-      <GenderSection 
-        title="Men's Collection" 
-        gender="men" 
-        products={products} 
-      />
-      
-      <GenderSection 
-        title="Women's Collection" 
-        gender="women" 
-        products={products} 
-      />
-      
-      <GenderSection 
-        title="Unisex Collection" 
-        gender="unisex" 
-        products={products} 
-      />
     </>
   )
 }

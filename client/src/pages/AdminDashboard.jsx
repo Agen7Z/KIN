@@ -2,9 +2,11 @@ import React, { useEffect, useState } from 'react'
 import { Package, Users, ShoppingCart, Plus, Trash2, Eye, Edit3, Home, DollarSign, TrendingUp, Star, Menu, X } from 'lucide-react'
 import { useAuth } from '../context/AuthContext.jsx'
 import ImageUpload from '../components/Admin/ImageUpload.jsx'
+import { useToast } from '../context/ToastContext.jsx'
 
 const AdminDashboard = () => {
   const { user, logout } = useAuth()
+  const { show } = useToast()
   const [activeSection, setActiveSection] = useState('overview')
   const [sidebarOpen, setSidebarOpen] = useState(false)
   
@@ -125,17 +127,17 @@ const AdminDashboard = () => {
     const submitProduct = async () => {
     // Validate required fields
     if (!form.name || !form.slug || !form.price) {
-      alert('Please fill in all required fields: Product Name, Slug, and Price')
+      show('Please fill in Product Name, Slug, and Price', { type: 'warning' })
       return
     }
     
     if (form.price <= 0) {
-      alert('Price must be greater than 0')
+      show('Price must be greater than 0', { type: 'warning' })
       return
     }
     
     if (form.countInStock < 0) {
-      alert('Stock quantity cannot be negative')
+      show('Stock quantity cannot be negative', { type: 'warning' })
       return
     }
     
@@ -149,7 +151,7 @@ const AdminDashboard = () => {
       console.log('Extracted token:', token)
       
       if (!token) {
-        alert('Authentication token not found. Please login again.')
+        show('Authentication token not found. Please login again.', { type: 'error' })
         return
       }
 
@@ -184,11 +186,11 @@ const AdminDashboard = () => {
           if (form.name && safeProducts.find(p => p.slug === form.slug)) {
             // Editing existing product
             setProducts(prev => ensureArray(prev).map(p => p.slug === form.slug ? newProduct.data : p))
-            alert('Product updated successfully!')
+            show('Product updated successfully!', { type: 'success' })
           } else {
             // Adding new product
             setProducts(prev => [newProduct.data, ...ensureArray(prev)])
-            alert('Product added successfully!')
+            show('Product added successfully!', { type: 'success' })
           }
          
          // Clear form
@@ -207,11 +209,11 @@ const AdminDashboard = () => {
        } else {
          const errorData = await response.json()
          console.error('Backend error:', errorData)
-         alert(`Failed to ${form.name ? 'update' : 'add'} product: ${errorData.message || 'Unknown error'}`)
+         show(`Failed to ${form.name ? 'update' : 'add'} product: ${errorData.message || 'Unknown error'}`, { type: 'error' })
        }
     } catch (error) {
       console.error('Error adding product:', error)
-      alert('Failed to add product. Please try again.')
+      show('Failed to add product. Please try again.', { type: 'error' })
     } finally {
       setSubmitting(false)
     }
@@ -233,10 +235,13 @@ const AdminDashboard = () => {
 
              if (response.ok) {
          setProducts(prev => ensureArray(prev).filter(p => p._id !== id))
+         show('Product deleted', { type: 'success' })
+       } else {
+         show('Failed to delete product', { type: 'error' })
        }
     } catch (error) {
       console.error('Error deleting product:', error)
-      alert('Failed to delete product. Please try again.')
+      show('Failed to delete product. Please try again.', { type: 'error' })
     }
   }
 
@@ -256,10 +261,13 @@ const AdminDashboard = () => {
 
              if (response.ok) {
          setUsers(prev => ensureArray(prev).filter(u => u._id !== id))
+         show('User deleted', { type: 'success' })
+       } else {
+         show('Failed to delete user', { type: 'error' })
        }
     } catch (error) {
       console.error('Error deleting user:', error)
-      alert('Failed to delete user. Please try again.')
+      show('Failed to delete user. Please try again.', { type: 'error' })
     }
   }
 
@@ -304,10 +312,13 @@ const AdminDashboard = () => {
 
              if (response.ok) {
          setOrders(prev => ensureArray(prev).map(o => o._id === id ? { ...o, status } : o))
+         show('Order updated', { type: 'success' })
+       } else {
+         show('Failed to update order', { type: 'error' })
        }
     } catch (error) {
       console.error('Error updating order:', error)
-      alert('Failed to update order status. Please try again.')
+      show('Failed to update order status. Please try again.', { type: 'error' })
     }
   }
 
@@ -462,7 +473,20 @@ const AdminDashboard = () => {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Product List</h1>
         <button
-          onClick={() => setActiveSection('add-product')}
+          onClick={() => {
+            setForm({ 
+              name: '', 
+              slug: '', 
+              price: '', 
+              description: '', 
+              category: 'general',
+              gender: 'unisex',
+              brand: '',
+              images: [],
+              countInStock: 0
+            })
+            setActiveSection('add-product')
+          }}
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
         >
           <Plus className="w-4 h-4" />
@@ -521,13 +545,13 @@ const AdminDashboard = () => {
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
-                                         <button 
-                       onClick={() => viewProduct(product)} 
+                                         <a 
+                       href={`/product/${product.slug || product._id}`}
                        className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
                        title="View Product"
                      >
                        <Eye className="w-5 h-5" />
-                     </button>
+                     </a>
                      <button 
                        onClick={() => debugProduct(product)} 
                        className="p-2 text-gray-400 hover:text-purple-600 transition-colors"
@@ -692,7 +716,20 @@ const AdminDashboard = () => {
                    )}
                  </button>
                                 <button 
-                   onClick={() => setActiveSection('products')} 
+                   onClick={() => {
+                     setForm({ 
+                       name: '', 
+                       slug: '', 
+                       price: '', 
+                       description: '', 
+                       category: 'general',
+                       gender: 'unisex',
+                       brand: '',
+                       images: [],
+                       countInStock: 0
+                     })
+                     setActiveSection('products')
+                   }} 
                    disabled={submitting}
                    className="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-3 px-6 rounded-lg transition-colors disabled:opacity-50"
                  >
