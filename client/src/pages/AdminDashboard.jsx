@@ -152,56 +152,72 @@ const AdminDashboard = () => {
         return
       }
 
+      // Check if we're editing an existing product
+      const existingProduct = safeProducts.find(p => p.slug === form.slug)
+      const isEditing = existingProduct && form.name
+      
+      const productData = {
+        ...form,
+        price: Number(form.price),
+        countInStock: Number(form.countInStock)
+      }
 
+      let response
+      if (isEditing) {
+        // Update existing product
+        response = await apiFetch(`/api/products/${existingProduct._id}`, {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(productData)
+        })
+      } else {
+        // Create new product
+        response = await apiFetch('/api/products', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(productData)
+        })
+      }
        
-       const response = await apiFetch('/api/products', {
-         method: 'POST',
-         headers: {
-           'Authorization': `Bearer ${token}`,
-           'Content-Type': 'application/json'
-         },
-         body: JSON.stringify({
-           ...form,
-           price: Number(form.price),
-           countInStock: Number(form.countInStock)
-         })
-       })
-       
-
-
-             if (response.ok) {
-         const newProduct = await response.json()
+      if (response.ok) {
+        const result = await response.json()
+        
+        if (isEditing) {
+          // Update products list for edited product
+          setProducts(prev => ensureArray(prev).map(p => p._id === existingProduct._id ? result.data : p))
+          show('Product updated successfully!', { type: 'success' })
+        } else {
+          // Add new product to list
+          setProducts(prev => [result.data, ...ensureArray(prev)])
+          show('Product added successfully!', { type: 'success' })
+        }
          
-                   // Update products list - replace if editing, add if new
-          if (form.name && safeProducts.find(p => p.slug === form.slug)) {
-            // Editing existing product
-            setProducts(prev => ensureArray(prev).map(p => p.slug === form.slug ? newProduct.data : p))
-            show('Product updated successfully!', { type: 'success' })
-          } else {
-            // Adding new product
-            setProducts(prev => [newProduct.data, ...ensureArray(prev)])
-            show('Product added successfully!', { type: 'success' })
-          }
-         
-         // Clear form
-         setForm({ 
-           name: '', 
-           slug: '', 
-           price: '', 
-           description: '', 
-           category: 'general',
-           gender: 'unisex',
-           brand: '',
-           images: [],
-           countInStock: 0
-         })
-         setActiveSection('products')
-       } else {
-         const errorData = await response.json()
-         show(`Failed to ${form.name ? 'update' : 'add'} product: ${errorData.message || 'Unknown error'}`, { type: 'error' })
-       }
+        // Clear form
+        setForm({ 
+          name: '', 
+          slug: '', 
+          price: '', 
+          description: '', 
+          category: 'general',
+          gender: 'unisex',
+          brand: '',
+          images: [],
+          countInStock: 0
+        })
+        setActiveSection('products')
+      } else {
+        const errorData = await response.json()
+        show(`Failed to ${isEditing ? 'update' : 'add'} product: ${errorData.message || 'Unknown error'}`, { type: 'error' })
+      }
     } catch (error) {
-      show('Failed to add product. Please try again.', { type: 'error' })
+      console.error('Product submission error:', error)
+      show(`Failed to ${isEditing ? 'update' : 'add'} product. Please try again.`, { type: 'error' })
     } finally {
       setSubmitting(false)
     }
