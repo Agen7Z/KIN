@@ -69,7 +69,7 @@ const Profile = () => {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <a href="#orders" className="px-4 py-2 rounded-xl ring-1 ring-neutral-300 text-neutral-800 hover:bg-neutral-100 transition">View Orders</a>
+              <a href="/orders" className="px-4 py-2 rounded-xl ring-1 ring-neutral-300 text-neutral-800 hover:bg-neutral-100 transition">View Orders</a>
               <button onClick={logout} className="px-4 py-2 rounded-xl bg-neutral-900 text-white hover:bg-black transition">Logout</button>
             </div>
           </div>
@@ -98,10 +98,6 @@ const Profile = () => {
                   <span className="text-neutral-500">Total Spent</span>
                   <span className="font-semibold text-neutral-900">Rs. {totalSpent.toFixed(2)}</span>
                 </div>
-              </div>
-              <div className="mt-6 flex gap-3">
-                <a href="#security" className="px-3 py-2 rounded-lg ring-1 ring-neutral-300 text-neutral-800 hover:bg-neutral-100 text-sm">Security</a>
-                <a href="#orders" className="px-3 py-2 rounded-lg bg-neutral-900 text-white hover:bg-black text-sm">Orders</a>
               </div>
             </div>
           </div>
@@ -140,7 +136,7 @@ const Profile = () => {
                       </div>
                     </div>
                     <div className="mt-3 divide-y divide-neutral-100">
-                      {o.items.map((it, idx) => (
+                      {o.items.slice(0,3).map((it, idx) => (
                         <div key={idx} className="py-2 flex items-center gap-3">
                           {it.image && <img src={it.image} alt={it.name} className="w-12 h-12 object-cover rounded-lg border border-neutral-200" />}
                           <div className="flex-1 min-w-0">
@@ -157,22 +153,7 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Security */}
-        <div id="security" className="mt-8 bg-white rounded-3xl border border-neutral-200 shadow-sm p-6">
-          <h2 className="text-lg font-semibold text-neutral-900 mb-4">Security</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <div className="p-4 rounded-2xl border border-neutral-200">
-              <p className="font-medium text-neutral-900">Password</p>
-              <p className="text-sm text-neutral-600">Update your password regularly to keep your account secure.</p>
-              <button className="mt-3 px-3 py-1.5 rounded-lg ring-1 ring-neutral-300 text-neutral-800 hover:bg-neutral-100 text-sm">Change Password</button>
-            </div>
-            <div className="p-4 rounded-2xl border border-neutral-200">
-              <p className="font-medium text-neutral-900">Sessions</p>
-              <p className="text-sm text-neutral-600">Review active sessions and sign out on devices you don’t recognize.</p>
-              <button className="mt-3 px-3 py-1.5 rounded-lg ring-1 ring-neutral-300 text-neutral-800 hover:bg-neutral-100 text-sm">Manage Sessions</button>
-            </div>
-          </div>
-        </div>
+        
       </div>
     </div>
   )

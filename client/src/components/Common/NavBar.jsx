@@ -29,7 +29,7 @@ const NavBar = () => {
           >
             {user ? (
               <span className="text-sm font-medium">
-                {user.username?.slice(0, 7) || user.name?.slice(0, 7) || 'User'}
+                {(user.email?.split('@')[0] || 'User').slice(0, 12)}
               </span>
             ) : (
               <HiOutlineUser />

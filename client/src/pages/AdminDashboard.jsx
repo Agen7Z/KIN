@@ -372,7 +372,7 @@ const AdminDashboard = () => {
                     <div key={order._id} className="flex items-center justify-between py-2">
                       <div>
                         <p className="font-medium text-gray-900">#{order._id.slice(-6)}</p>
-                        <p className="text-sm text-gray-500">{order.user?.username || 'Unknown'}</p>
+                        <p className="text-sm text-gray-500">{order.user?.email ? order.user.email.split('@')[0] : 'Unknown'}</p>
                       </div>
                                            <div className="text-right">
                        <p className="font-medium text-gray-900">Rs. {order.total?.toFixed(2) || '0.00'}</p>
@@ -805,7 +805,7 @@ const AdminDashboard = () => {
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900">Order #{order._id.slice(-6)}</h3>
-                  <p className="text-sm text-gray-500">Customer: {order.user?.username || 'Unknown'} • Date: {new Date(order.createdAt).toLocaleDateString()}</p>
+                  <p className="text-sm text-gray-500">Customer: {order.user?.email ? order.user.email.split('@')[0] : 'Unknown'} • Date: {new Date(order.createdAt).toLocaleDateString()}</p>
                                      <p className="text-lg font-medium text-green-600 mt-1">Rs. {order.total?.toFixed(2) || '0.00'}</p>
                 </div>
                 <span className={`px-4 py-2 rounded-full text-sm font-medium ${
@@ -862,7 +862,7 @@ const AdminDashboard = () => {
         <div className="px-6 py-4 flex items-center justify-between">
           <h1 className="text-xl font-semibold text-gray-900">KIN Admin Dashboard</h1>
           <div className="flex items-center space-x-4">
-            <div className="text-sm text-gray-600">Welcome, {user?.username}</div>
+            <div className="text-sm text-gray-600">Welcome, {user?.email ? user.email.split('@')[0] : 'Admin'}</div>
             <button
               onClick={logout}
               className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg text-sm transition-colors"

@@ -91,14 +91,14 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
-  const signup = async (email, password, name) => {
+  const signup = async (email, password) => {
     try {
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ username: name, email, password })
+        body: JSON.stringify({ email, password })
       })
 
       const data = await response.json()
@@ -121,6 +121,33 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
+  const loginWithGoogle = async (credentialPayload) => {
+    try {
+      // The credentialPayload comes from Google Identity Services (JWT). We should verify on server.
+      // For simplicity, send it to our backend to decode/verify and return our JWT.
+      const response = await fetch('/api/auth/google', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(credentialPayload)
+      })
+
+      const data = await response.json()
+      if (!response.ok) {
+        throw new Error(data.message || 'Google login failed')
+      }
+
+      const token = data.data.token
+      if (!token) throw new Error('No token received from server')
+      localStorage.setItem('kin_auth', JSON.stringify({ token }))
+      setUser(data.data.user)
+      return { success: true }
+    } catch (error) {
+      return { success: false, error: error.message }
+    }
+  }
+
   const logout = () => {
     localStorage.removeItem('kin_auth')
     setUser(null)
@@ -131,6 +158,7 @@ export const AuthProvider = ({ children }) => {
     loading,
     login,
     signup,
+    loginWithGoogle,
     logout
   }
 

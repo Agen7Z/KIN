@@ -2,11 +2,6 @@ import mongoose from "mongoose";
 
 
 const userSchema = new mongoose.Schema({
-    username: {
-        type: String,
-        required: true,
-        unique: true,
-    },
     email: {
         type: String,
         required: true,
@@ -14,12 +9,22 @@ const userSchema = new mongoose.Schema({
     },
     password: {
         type: String,
-        required: true,
+        required: false,
     },
     role: {
         type: String,
         enum: ["admin", "user"],
         default: "user",
+    },
+    provider: {
+        type: String,
+        enum: ["local", "google"],
+        default: "local",
+    },
+    googleId: {
+        type: String,
+        required: false,
+        unique: false,
     },
 }, { timestamps: true });
 

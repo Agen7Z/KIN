@@ -48,7 +48,7 @@ const Hero = () => {
           KINN
         </h1>
         <p className="mt-4 text-lg md:text-xl text-white/90 drop-shadow">
-          Shop now regret later
+        Keep Keen, Keep KINN
         </p>
       </div>
     </section>

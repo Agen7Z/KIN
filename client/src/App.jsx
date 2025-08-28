@@ -8,6 +8,7 @@ import { useAuth } from './hooks/useAuth.js'
 import Home from './pages/Home'
 import ProductsPage from './pages/ProductsPage'
 import CartDrawer from './components/Cart/CartDrawer'
+import Footer from './components/Common/Footer.jsx'
 import ProductDetail from './pages/ProductDetail'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
@@ -15,6 +16,8 @@ import Profile from './pages/Profile'
 import AdminDashboard from './pages/AdminDashboard'
 import Checkout from './pages/Checkout'
 import OrderDetail from './pages/OrderDetail'
+import OrdersList from './pages/OrdersList'
+import About from './pages/About'
 
 // Protected Route Component
 const ProtectedRoute = ({ children, requiredRole = null }) => {
@@ -54,8 +57,11 @@ const App = () => {
             <Route path='/admin' element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />
             <Route path='/checkout' element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
             <Route path='/orders/:id' element={<ProtectedRoute><OrderDetail /></ProtectedRoute>} />
+            <Route path='/orders' element={<ProtectedRoute><OrdersList /></ProtectedRoute>} />
+            <Route path='/about' element={<About />} />
           </Routes>
           <CartDrawer />
+          <Footer />
           </ToastProvider>
         </CartProvider>
       </AuthProvider>

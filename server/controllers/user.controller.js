@@ -11,21 +11,21 @@ const signToken = (userId) => {
 
 export const registerUser = async (req, res, next) => {
     try {
-        const { username, email, password } = req.body;
+        const { email, password } = req.body;
 
-        if (!username || !email || !password) {
-            return next(new AppError("username, email and password are required", 400));
+        if (!email || !password) {
+            return next(new AppError("email and password are required", 400));
         }
 
-        const existing = await User.findOne({ $or: [{ email }, { username }] });
+        const existing = await User.findOne({ email });
         if (existing) {
-            return next(new AppError("User with provided email or username already exists", 409));
+            return next(new AppError("User with provided email already exists", 409));
         }
 
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        const user = await User.create({ username, email, password: hashedPassword });
+        const user = await User.create({ email, password: hashedPassword, provider: 'local' });
 
         const token = signToken(user._id);
 
@@ -34,7 +34,6 @@ export const registerUser = async (req, res, next) => {
             data: {
                 user: {
                     id: user._id,
-                    username: user.username,
                     email: user.email,
                     role: user.role,
                 },
@@ -73,7 +72,6 @@ export const loginUser = async (req, res, next) => {
             data: {
                 user: {
                     id: user._id,
-                    username: user.username,
                     email: user.email,
                     role: user.role,
                 },
@@ -84,6 +82,33 @@ export const loginUser = async (req, res, next) => {
         next(error);
     }
 };
+
+export const googleAuth = async (req, res, next) => {
+    try {
+        const { sub, email } = req.body; // sub is Google user ID from verified token
+        if (!sub || !email) return next(new AppError('Invalid Google token', 400));
+
+        let user = await User.findOne({ email });
+        if (!user) {
+            user = await User.create({ email, provider: 'google', googleId: sub, password: '' });
+        }
+
+        const token = signToken(user._id);
+        res.status(200).json({
+            status: 'success',
+            data: {
+                user: {
+                    id: user._id,
+                    email: user.email,
+                    role: user.role,
+                },
+                token,
+            },
+        });
+    } catch (error) {
+        next(error);
+    }
+}
 
 export const getMe = async (req, res, next) => {
     try {
