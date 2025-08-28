@@ -16,6 +16,7 @@ const AdminDashboard = () => {
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
+  const [confirmModal, setConfirmModal] = useState({ open: false, title: '', message: '', onConfirm: null, loading: false })
 
   // Safety function to ensure state is always an array
   const ensureArray = (value) => {
@@ -179,11 +180,9 @@ const AdminDashboard = () => {
   }
 
      const deleteProduct = async (id) => {
-     if (!window.confirm('Are you sure you want to delete this product?')) return
-     
-     try {
-       const token = localStorage.getItem('kin_auth') ? JSON.parse(localStorage.getItem('kin_auth')).token : null
-       if (!token) return
+    try {
+      const token = localStorage.getItem('kin_auth') ? JSON.parse(localStorage.getItem('kin_auth')).token : null
+      if (!token) return
 
       const response = await fetch(`/api/products/${id}`, {
         method: 'DELETE',
@@ -192,23 +191,31 @@ const AdminDashboard = () => {
         }
       })
 
-             if (response.ok) {
-         setProducts(prev => ensureArray(prev).filter(p => p._id !== id))
-         show('Product deleted', { type: 'success' })
-       } else {
-         show('Failed to delete product', { type: 'error' })
-       }
+      if (response.ok) {
+        setProducts(prev => ensureArray(prev).filter(p => p._id !== id))
+        show('Product deleted', { type: 'success' })
+      } else {
+        show('Failed to delete product', { type: 'error' })
+      }
     } catch (error) {
       show('Failed to delete product. Please try again.', { type: 'error' })
     }
   }
 
-     const deleteUser = async (id) => {
-     if (!window.confirm('Are you sure you want to delete this user?')) return
-     
-     try {
-       const token = localStorage.getItem('kin_auth') ? JSON.parse(localStorage.getItem('kin_auth')).token : null
-       if (!token) return
+  const confirmDeleteProduct = (id) => {
+    setConfirmModal({
+      open: true,
+      title: 'Delete product?',
+      message: 'This action cannot be undone.',
+      loading: false,
+      onConfirm: async () => deleteProduct(id)
+    })
+  }
+
+  const deleteUser = async (id) => {
+    try {
+      const token = localStorage.getItem('kin_auth') ? JSON.parse(localStorage.getItem('kin_auth')).token : null
+      if (!token) return
 
       const response = await fetch(`/api/users/${id}`, {
         method: 'DELETE',
@@ -217,15 +224,25 @@ const AdminDashboard = () => {
         }
       })
 
-             if (response.ok) {
-         setUsers(prev => ensureArray(prev).filter(u => u._id !== id))
-         show('User deleted', { type: 'success' })
-       } else {
-         show('Failed to delete user', { type: 'error' })
-       }
+      if (response.ok) {
+        setUsers(prev => ensureArray(prev).filter(u => u._id !== id))
+        show('User deleted', { type: 'success' })
+      } else {
+        show('Failed to delete user', { type: 'error' })
+      }
     } catch (error) {
       show('Failed to delete user. Please try again.', { type: 'error' })
     }
+  }
+
+  const confirmDeleteUser = (id) => {
+    setConfirmModal({
+      open: true,
+      title: 'Delete user?',
+      message: 'This will permanently remove the user.',
+      loading: false,
+      onConfirm: async () => deleteUser(id)
+    })
   }
 
            const handleImagesChange = (newImages) => {
@@ -518,7 +535,7 @@ const AdminDashboard = () => {
                       <Edit3 className="w-5 h-5" />
                     </button>
                     <button 
-                      onClick={() => deleteProduct(product._id)} 
+                      onClick={() => confirmDeleteProduct(product._id)} 
                       className="p-2 text-gray-400 hover:text-red-600 transition-colors"
                       title="Delete Product"
                     >
@@ -767,7 +784,7 @@ const AdminDashboard = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       <button 
-                        onClick={() => deleteUser(u._id)} 
+                        onClick={() => confirmDeleteUser(u._id)} 
                         className="text-red-600 hover:text-red-900 transition-colors font-medium"
                       >
                         Delete
@@ -931,6 +948,40 @@ const AdminDashboard = () => {
           </div>
         </div>
       </div>
+
+      {confirmModal.open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40" onClick={() => !confirmModal.loading && setConfirmModal(c => ({ ...c, open: false }))} />
+          <div className="relative z-10 w-full max-w-md bg-white rounded-xl shadow-2xl border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900">{confirmModal.title || 'Please Confirm'}</h3>
+            <p className="text-sm text-gray-600 mt-2">{confirmModal.message || 'Are you sure you want to continue?'}</p>
+            <div className="mt-6 flex justify-end gap-2">
+              <button
+                className="px-4 py-2 text-sm rounded border border-gray-200"
+                disabled={confirmModal.loading}
+                onClick={() => setConfirmModal(c => ({ ...c, open: false }))}
+              >
+                Cancel
+              </button>
+              <button
+                className={`px-4 py-2 text-sm rounded ${confirmModal.loading ? 'bg-red-400' : 'bg-red-600 hover:bg-red-700'} text-white`}
+                disabled={confirmModal.loading}
+                onClick={async () => {
+                  try {
+                    setConfirmModal(c => ({ ...c, loading: true }))
+                    await confirmModal.onConfirm?.()
+                    setConfirmModal(c => ({ ...c, open: false, loading: false }))
+                  } catch {
+                    setConfirmModal(c => ({ ...c, loading: false }))
+                  }
+                }}
+              >
+                {confirmModal.loading ? 'Deleting…' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
