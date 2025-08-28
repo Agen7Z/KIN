@@ -98,13 +98,37 @@ export const loginUser = async (req, res, next) => {
 export const googleAuth = async (req, res, next) => {
     try {
         const { sub, email } = req.body; // sub is Google user ID from verified token
-        if (!sub || !email) return next(new AppError('Invalid Google token', 400));
+        if (!sub || !email) {
+            console.error('Missing sub or email in Google auth request');
+            return next(new AppError('Invalid Google token', 400));
+        }
 
+        console.log('Looking for existing user with email:', email);
         let user = await User.findOne({ email });
         let isNewUser = false;
+        
         if (!user) {
-            user = await User.create({ email, provider: 'google', googleId: sub, password: '' });
-            isNewUser = true;
+            console.log('Creating new Google user');
+            try {
+                user = await User.create({ 
+                    email, 
+                    provider: 'google', 
+                    googleId: sub, 
+                    password: undefined // Don't set password for Google users
+                });
+                isNewUser = true;
+                console.log('New Google user created:', user._id);
+            } catch (createError) {
+                console.error('Error creating Google user:', createError);
+                return next(new AppError('Failed to create user account', 500));
+            }
+        } else {
+            console.log('Existing user found:', user._id);
+            // Update googleId if it's not set
+            if (!user.googleId) {
+                user.googleId = sub;
+                await user.save();
+            }
         }
 
         const token = signToken(user._id);
@@ -133,6 +157,7 @@ export const googleAuth = async (req, res, next) => {
             },
         });
     } catch (error) {
+        console.error('Google auth error:', error);
         next(error);
     }
 }

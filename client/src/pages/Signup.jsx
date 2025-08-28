@@ -14,24 +14,53 @@ const Signup = () => {
 
   useEffect(() => {
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
-    if (!clientId || !(window).google) return
-    try {
-      (window).google.accounts.id.initialize({
-        client_id: clientId,
-        callback: async (response) => {
-          try {
-            const payload = JSON.parse(atob(response.credential.split('.')[1] || ''))
-            const { sub, email } = payload
-            const result = await loginWithGoogle({ sub, email })
-            // If successful, the auth context will set user and redirect by effect
-          } catch (e) {}
+    if (!clientId) {
+      console.error('Google Client ID not found')
+      return
+    }
+
+    // Wait for Google script to load
+    const waitForGoogle = () => {
+      if (window.google && window.google.accounts && window.google.accounts.id) {
+        try {
+          console.log('Initializing Google Sign-In for Signup')
+          window.google.accounts.id.initialize({
+            client_id: clientId,
+            use_fedcm_for_prompt: true,
+            auto_select: false,
+            cancel_on_tap_outside: true,
+            callback: async (response) => {
+              try {
+                console.log('Google signup callback received')
+                const payload = JSON.parse(atob(response.credential.split('.')[1] || ''))
+                const { sub, email } = payload
+                const result = await loginWithGoogle({ sub, email })
+                // If successful, the auth context will set user and redirect by effect
+              } catch (error) {
+                console.error('Google signup error:', error)
+              }
+            }
+          })
+          
+          const container = document.getElementById('google-signup-btn')
+          if (container) {
+            window.google.accounts.id.renderButton(container, { 
+              theme: 'outline', 
+              size: 'large', 
+              shape: 'pill', 
+              width: '100%' 
+            })
+          }
+        } catch (error) {
+          console.error('Error initializing Google Sign-In:', error)
         }
-      })
-      const container = document.getElementById('google-signup-btn')
-      if (container) {
-        (window).google.accounts.id.renderButton(container, { theme: 'outline', size: 'large', shape: 'pill', width: '100%' })
+      } else {
+        // Retry after a short delay
+        setTimeout(waitForGoogle, 100)
       }
-    } catch {}
+    }
+    
+    waitForGoogle()
   }, [loginWithGoogle])
 
   // Redirect if already logged in

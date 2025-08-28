@@ -13,38 +13,67 @@ const Login = () => {
 
   useEffect(() => {
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
-    if (!clientId || !(window).google) return
-    try {
-      (window).google.accounts.id.initialize({
-        client_id: clientId,
-        use_fedcm_for_prompt: true,
-        callback: async (response) => {
-          try {
-            const payload = JSON.parse(atob(response.credential.split('.')[1] || ''))
-            const { sub, email } = payload
-            const result = await loginWithGoogle({ sub, email })
-            if (!result.success) setError(result.error || 'Google login failed')
-          } catch {
-            setError('Google login failed')
+    if (!clientId) {
+      console.error('Google Client ID not found')
+      return
+    }
+
+    // Wait for Google script to load
+    const waitForGoogle = () => {
+      if (window.google && window.google.accounts && window.google.accounts.id) {
+        try {
+          console.log('Initializing Google Sign-In')
+          window.google.accounts.id.initialize({
+            client_id: clientId,
+            use_fedcm_for_prompt: true,
+            auto_select: false,
+            cancel_on_tap_outside: true,
+            callback: async (response) => {
+              try {
+                console.log('Google callback received')
+                const payload = JSON.parse(atob(response.credential.split('.')[1] || ''))
+                const { sub, email } = payload
+                console.log('Google user data:', { sub, email })
+                const result = await loginWithGoogle({ sub, email })
+                if (!result.success) {
+                  console.error('Google login failed:', result.error)
+                  setError(result.error || 'Google login failed')
+                } else {
+                  console.log('Google login successful')
+                }
+              } catch (error) {
+                console.error('Google login error:', error)
+                setError(`Google login failed: ${error.message}`)
+              }
+            }
+          })
+          
+          const container = document.getElementById('google-login-btn-custom')
+          if (container) {
+            window.google.accounts.id.renderButton(container, {
+              type: 'standard',
+              theme: 'filled_black',
+              text: 'continue_with',
+              size: 'large',
+              shape: 'pill',
+              logo_alignment: 'left',
+              width: 320,
+              locale: 'en'
+            })
           }
+          
+          // Remove the prompt call to avoid multiple credential requests
+          // window.google.accounts.id.prompt(() => {})
+        } catch (error) {
+          console.error('Error initializing Google Sign-In:', error)
         }
-      })
-      const container = document.getElementById('google-login-btn-custom')
-      if (container) {
-        ;(window).google.accounts.id.renderButton(container, {
-          type: 'standard',
-          theme: 'filled_black',
-          text: 'continue_with',
-          size: 'large',
-          shape: 'pill',
-          logo_alignment: 'left',
-          width: 320,
-          locale: 'en'
-        })
+      } else {
+        // Retry after a short delay
+        setTimeout(waitForGoogle, 100)
       }
-      // Probe One Tap availability
-      ;(window).google.accounts.id.prompt(() => {})
-    } catch {}
+    }
+    
+    waitForGoogle()
   }, [loginWithGoogle])
 
   useEffect(() => {
@@ -85,6 +114,11 @@ const Login = () => {
         {/* Social Login Button (Google renders here) */}
         <div className="mb-6 flex justify-center">
           <div id="google-login-btn-custom" className="w-[320px]" />
+          {!import.meta.env.VITE_GOOGLE_CLIENT_ID && (
+            <div className="w-[320px] p-4 text-center text-sm text-red-500 bg-red-50 border border-red-200 rounded-lg">
+              Google Sign-In not configured. Please check your environment variables.
+            </div>
+          )}
         </div>
 
         {/* Divider */}
