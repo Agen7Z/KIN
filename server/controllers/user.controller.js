@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 import User from "../models/user.model.js";
 import AppError from "../utils/appError.js";
 import { sendEmailViaEmailJS } from "../utils/email.js";
@@ -109,18 +110,51 @@ export const googleAuth = async (req, res, next) => {
         
         if (!user) {
             console.log('Creating new Google user');
+            console.log('User data to create:', { email, provider: 'google', googleId: sub });
+            
             try {
+                // Check if MongoDB is connected
+                if (mongoose.connection.readyState !== 1) {
+                    console.error('MongoDB not connected. Ready state:', mongoose.connection.readyState);
+                    return next(new AppError('Database connection error', 500));
+                }
+                
+                // Generate a unique username for Google users
+                const generateUsername = async (email) => {
+                    const baseUsername = email.split('@')[0];
+                    let username = baseUsername;
+                    let counter = 1;
+                    
+                    while (true) {
+                        const existingUser = await User.findOne({ username });
+                        if (!existingUser) break;
+                        username = `${baseUsername}${counter}`;
+                        counter++;
+                    }
+                    return username;
+                };
+                
+                const username = await generateUsername(email);
+                console.log('Generated username for Google user:', username);
+                
                 user = await User.create({ 
                     email, 
+                    username,
                     provider: 'google', 
                     googleId: sub, 
                     password: undefined // Don't set password for Google users
                 });
                 isNewUser = true;
-                console.log('New Google user created:', user._id);
+                console.log('New Google user created successfully:', user._id);
             } catch (createError) {
-                console.error('Error creating Google user:', createError);
-                return next(new AppError('Failed to create user account', 500));
+                console.error('Error creating Google user - Full error:', createError);
+                console.error('Error name:', createError.name);
+                console.error('Error message:', createError.message);
+                console.error('Error code:', createError.code);
+                if (createError.errors) {
+                    console.error('Validation errors:', createError.errors);
+                }
+                return next(new AppError(`Failed to create user account: ${createError.message}`, 500));
             }
         } else {
             console.log('Existing user found:', user._id);

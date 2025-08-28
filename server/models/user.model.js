@@ -7,6 +7,12 @@ const userSchema = new mongoose.Schema({
         required: true,
         unique: true,
     },
+    username: {
+        type: String,
+        required: false,
+        unique: true,
+        sparse: true, // Allows multiple null values
+    },
     password: {
         type: String,
         required: function() {
