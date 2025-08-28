@@ -26,15 +26,7 @@ if (!process.env.JWT_SECRET) {
     // console.log('⚠️  Using temporary JWT_SECRET - fix your .env file!');
 }
 
-// Debug: Log all environment variables
-// console.log('=== Environment Variables Debug ===');
-// console.log('JWT_SECRET:', process.env.JWT_SECRET ? 'SET' : 'NOT SET');
-// console.log('MONGO_URI:', process.env.MONGO_URI ? 'SET' : 'NOT SET');
-// console.log('PORT:', process.env.PORT || 'NOT SET (will use default 3000)');
-// console.log('NODE_ENV:', process.env.NODE_ENV || 'NOT SET');
-// console.log('==================================');
 
-// Check required environment variables
 
 if (!process.env.MONGO_URI) {
     console.error('MONGO_URI is not set in environment variables');
@@ -49,12 +41,21 @@ if (!process.env.MONGO_URI) {
 const app = express();
 
 // CORS configuration - more permissive for development
+
+const allowedOrigins = [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'http://localhost:4000',
+    process.env.CLIENT_URL 
+  ].filter(Boolean);
+
 app.use(cors({
-    origin: ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:3001', 'http://localhost:4000'],
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'Accept'],
-    exposedHeaders: ['Content-Length', 'X-Requested-With']
+  origin: allowedOrigins,
+  credentials: true,
+  methods: ['GET','POST','PUT','DELETE','PATCH','OPTIONS'],
+  allowedHeaders: ['Content-Type','Authorization','Cookie','Accept'],
+  exposedHeaders: ['Content-Length','X-Requested-With']
 }));
 
 // Pre-flight requests
