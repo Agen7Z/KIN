@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import NavBar from '../components/Common/NavBar'
+import apiFetch from '../utils/api'
 import { useCart } from '../hooks/useCart'
 import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../hooks/useToast'
@@ -32,7 +33,7 @@ const ProductDetail = () => {
       if (!slug) return
       try {
         setLoading(true)
-        const res = await fetch(`/api/products/${slug}`)
+        const res = await apiFetch(`/api/products/${slug}`)
         const json = await res.json()
         setProduct(json?.data?.product || null)
       } catch {
@@ -179,7 +180,7 @@ const ProductDetail = () => {
                   slug={product.slug}
                   onSubmitted={async () => {
                     try {
-                      const res = await fetch(`/api/products/${product.slug}`)
+                      const res = await apiFetch(`/api/products/${product.slug}`)
                       const json = await res.json()
                       setProduct(json?.data?.product || product)
                       show('Review added', { type: 'success' })
@@ -273,7 +274,7 @@ const ReviewForm = ({ slug, onSubmitted }) => {
     e.preventDefault()
     try {
       const token = localStorage.getItem('kin_auth') ? JSON.parse(localStorage.getItem('kin_auth')).token : null
-      const res = await fetch(`/api/products/${slug}/reviews`, {
+      const res = await apiFetch(`/api/products/${slug}/reviews`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify({ rating, comment }),
