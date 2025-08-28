@@ -10,25 +10,45 @@ import apiFetch from '../utils/api'
 const useProducts = (category, gender) => {
   const [data, setData] = useState([])
   const [loading, setLoading] = useState(true)
-  useEffect(() => {
-    const load = async () => {
-      setLoading(true)
-      try {
-        const params = new URLSearchParams()
-        if (category) params.set('category', category)
-        if (gender && gender !== 'all') params.set('gender', gender)
-        const res = await apiFetch(`/api/products?${params.toString()}`)
-        const json = await res.json()
-        setData(json?.data?.products || [])
-      } catch {
-        setData([])
-      } finally {
-        setLoading(false)
+  const [hasMore, setHasMore] = useState(true)
+  const [page, setPage] = useState(1)
+  
+  const loadMore = useCallback(async (pageNum = 1, append = false) => {
+    try {
+      const params = new URLSearchParams()
+      if (category) params.set('category', category)
+      if (gender && gender !== 'all') params.set('gender', gender)
+      params.set('page', pageNum)
+      params.set('limit', 50) // Increase limit to get more products
+      
+      const res = await apiFetch(`/api/products?${params.toString()}`)
+      const json = await res.json()
+      const newProducts = json?.data?.products || []
+      
+      if (append) {
+        setData(prev => [...prev, ...newProducts])
+      } else {
+        setData(newProducts)
       }
+      
+      // Check if there are more products
+      setHasMore(newProducts.length === 50)
+      setPage(pageNum)
+    } catch {
+      if (!append) setData([])
+    } finally {
+      setLoading(false)
     }
-    load()
   }, [category, gender])
-  return { data, loading }
+  
+  useEffect(() => {
+    setPage(1)
+    setData([])
+    setHasMore(true)
+    loadMore(1, false)
+  }, [category, gender, loadMore])
+  
+  return { data, loading, hasMore, loadMore, page }
 }
 
 const useTrending = () => {
@@ -72,7 +92,7 @@ const ProductsPage = () => {
   const [sortBy, setSortBy] = useState('Featured')
   const [selectedGender, setSelectedGender] = useState(getGenderFromPath())
   
-  const { data: products } = useProducts(category, selectedGender)
+  const { data: products, loading: productsLoading, hasMore, loadMore, page } = useProducts(category, selectedGender)
   const trendingProducts = useTrending()
   
   // Update selectedGender when URL changes
@@ -92,6 +112,10 @@ const ProductsPage = () => {
     setSelectedCollections([])
     setSortBy('Featured')
     setSelectedGender(getGenderFromPath())
+    // Reset pagination
+    if (loadMore) {
+      loadMore(1, false)
+    }
   }
   
   const withinPrice = (price, range) => {
@@ -268,6 +292,49 @@ const ProductsPage = () => {
                 </div>
               </div>
 
+              {/* Category Filter */}
+              <div className="pb-6 border-b border-gray-100">
+                <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-6">
+                  Category
+                </h3>
+                <div className="space-y-4">
+                  {[ 
+                    { label: 'All Categories', value: 'all' },
+                    { label: 'Party', value: 'party' },
+                    { label: 'Classic', value: 'classic' },
+                    { label: 'Formal', value: 'formal' },
+                    { label: 'General', value: 'general' }
+                  ].map((cat) => (
+                    <label key={cat.value} className="flex items-center group cursor-pointer">
+                      <div className="relative">
+                        <input 
+                          type="radio" 
+                          name="category"
+                          className="sr-only peer" 
+                          checked={category === cat.value || (!category && cat.value === 'all')}
+                          onChange={() => {
+                            if (cat.value === 'all') {
+                              window.history.pushState({}, '', '/products')
+                            } else {
+                              window.history.pushState({}, '', `/products/${cat.value}`)
+                            }
+                            window.location.reload()
+                          }}
+                        />
+                        <div className="w-5 h-5 border-2 border-gray-300 peer-checked:border-gray-900 peer-checked:bg-gray-900 transition-all duration-200 relative">
+                          <svg className="w-3 h-3 text-white absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-0 peer-checked:opacity-100" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                      </div>
+                      <span className="ml-3 text-gray-700 group-hover:text-gray-900 transition-colors font-medium">
+                        {cat.label}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
               {/* Collections */}
               <div className="pb-6 border-b border-gray-100">
                 <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-6">
@@ -358,21 +425,46 @@ const ProductsPage = () => {
                 />
               ))}
               
-              {/* If no products found */}
-              {products.length === 0 && (
+              {/* Loading state */}
+              {productsLoading && page === 1 && (
                 <div className="col-span-full text-center py-16">
-                  <p className="text-gray-500 text-lg">No products found for {category}.</p>
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
+                  <p className="text-gray-500 text-lg">Loading products...</p>
+                </div>
+              )}
+              
+              {/* If no products found */}
+              {!productsLoading && products.length === 0 && (
+                <div className="col-span-full text-center py-16">
+                  <p className="text-gray-500 text-lg">No products found for {category || 'this category'}.</p>
                   <p className="text-gray-400 text-sm mt-2">Try adjusting your filters or check back later.</p>
                 </div>
               )}
             </div>
 
             {/* Load More */}
-            <div className="text-center mt-12 pt-8 border-t border-gray-100">
-              <button className="bg-gray-900 text-white px-8 py-3 font-medium uppercase tracking-wider hover:bg-gray-700 transition-colors duration-300">
-                Load More Products
-              </button>
-            </div>
+            {hasMore && (
+              <div className="text-center mt-12 pt-8 border-t border-gray-100">
+                <button 
+                  onClick={() => loadMore(page + 1, true)}
+                  disabled={productsLoading}
+                  className={`px-8 py-3 font-medium uppercase tracking-wider transition-colors duration-300 ${
+                    productsLoading 
+                      ? 'bg-gray-400 cursor-not-allowed text-white' 
+                      : 'bg-gray-900 text-white hover:bg-gray-700'
+                  }`}
+                >
+                  {productsLoading && page > 1 ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mx-auto mb-2"></div>
+                      Loading More...
+                    </>
+                  ) : (
+                    'Load More Products'
+                  )}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
