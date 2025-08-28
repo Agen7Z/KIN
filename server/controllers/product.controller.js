@@ -24,6 +24,83 @@ export const createProduct = async (req, res, next) => {
     }
 };
 
+export const bulkImportProducts = async (req, res, next) => {
+    try {
+        if (req.user.role !== 'admin') {
+            return next(new AppError('Only admins can bulk import products', 403));
+        }
+        
+        const { products } = req.body;
+        
+        if (!Array.isArray(products) || products.length === 0) {
+            return next(new AppError('Products array is required and must not be empty', 400));
+        }
+        
+        console.log(`Bulk importing ${products.length} products...`);
+        
+        // Add default values and validation
+        const productsToCreate = products.map(product => ({
+            ...product,
+            isActive: true,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        }));
+        
+        const createdProducts = await Product.insertMany(productsToCreate, { 
+            ordered: false // Continue even if some fail
+        });
+        
+        console.log(`Successfully imported ${createdProducts.length} products`);
+        
+        res.status(201).json({
+            status: 'success',
+            message: `Successfully imported ${createdProducts.length} products`,
+            data: { 
+                count: createdProducts.length,
+                products: createdProducts 
+            }
+        });
+    } catch (error) {
+        console.error('Bulk import error:', error);
+        next(error);
+    }
+};
+
+export const deleteAllProducts = async (req, res, next) => {
+    try {
+        const result = await Product.deleteMany({});
+        
+        res.status(200).json({
+            status: 'success',
+            message: `Successfully deleted ${result.deletedCount} products`,
+            data: {
+                deletedCount: result.deletedCount
+            }
+        });
+    } catch (error) {
+        console.error('Delete all products error:', error);
+        next(error);
+    }
+};
+
+export const getAllProductsForAdmin = async (req, res, next) => {
+    try {
+        if (req.user.role !== 'admin') {
+            return next(new AppError('Only admins can access all products', 403));
+        }
+        
+        const products = await Product.find({}).sort({ createdAt: -1 });
+        
+        res.status(200).json({ 
+            status: "success", 
+            results: products.length, 
+            data: { products } 
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 export const getProducts = async (req, res, next) => {
     try {
         const { q, category, gender, minPrice, maxPrice, sort, page = 1, limit = 12 } = req.query;

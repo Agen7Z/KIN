@@ -1,17 +1,38 @@
-import { Router } from "express";
-import { createProduct, deleteProduct, getProductBySlug, getProducts, updateProduct, addReview, getTrendingProducts } from "../controllers/product.controller.js";
-import { protect, restrictTo } from "../middlewares/auth.middleware.js";
+import express from 'express';
+import { protect, restrictTo } from '../middlewares/auth.middleware.js';
+import {
+    getProducts,
+    getProductBySlug,
+    createProduct,
+    updateProduct,
+    deleteProduct,
+    bulkImportProducts,
+    deleteAllProducts,
+    getTrendingProducts,
+    addReview,
+    getAllProductsForAdmin
+} from '../controllers/product.controller.js';
 
-const router = Router();
+const router = express.Router();
 
-router.get("/", getProducts);
-router.get("/trending/top", getTrendingProducts);
-router.get("/:slug", getProductBySlug);
-router.post("/:slug/reviews", protect, addReview);
+// Public routes
+router.get('/', getProducts);
+router.get('/trending/top', getTrendingProducts);
+router.get('/:slug', getProductBySlug);
 
-router.post("/", protect, restrictTo("admin"), createProduct);
-router.patch("/:id", protect, restrictTo("admin"), updateProduct);
-router.delete("/:id", protect, restrictTo("admin"), deleteProduct);
+// Protected routes (admin only)
+router.use(protect);
+router.use(restrictTo('admin'));
+
+router.get('/admin/all', getAllProductsForAdmin);
+router.post('/', createProduct);
+router.post('/bulk-import', bulkImportProducts);
+router.delete('/delete-all', deleteAllProducts);
+router.patch('/:id', updateProduct);
+router.delete('/:id', deleteProduct);
+
+// User review route (protected but not admin-only)
+router.post('/:slug/reviews', addReview);
 
 export default router;
 

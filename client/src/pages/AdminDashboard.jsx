@@ -18,6 +18,12 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [confirmModal, setConfirmModal] = useState({ open: false, title: '', message: '', onConfirm: null, loading: false })
+  
+  // Pagination and search state for products
+  const [currentPage, setCurrentPage] = useState(1)
+  const [productsPerPage] = useState(10)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [filteredProducts, setFilteredProducts] = useState([])
 
   // Safety function to ensure state is always an array
   const ensureArray = (value) => {
@@ -57,7 +63,7 @@ const AdminDashboard = () => {
       const [usersRes, ordersRes, productsRes] = await Promise.all([
         apiFetch('/api/users', { headers }),
         apiFetch('/api/orders', { headers }),
-        apiFetch('/api/products', { headers })
+        apiFetch('/api/products/admin/all', { headers })
       ])
 
       if (usersRes.ok) {
@@ -87,6 +93,27 @@ const AdminDashboard = () => {
       fetchData()
     }
   }, [user, fetchData])
+
+  // Filter and paginate products when products or search term changes
+  useEffect(() => {
+    const filtered = safeProducts.filter(product => 
+      product.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.gender?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.brand?.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    setFilteredProducts(filtered)
+    setCurrentPage(1) // Reset to first page when search changes
+  }, [products, searchTerm])
+
+  // Get current products for current page
+  const indexOfLastProduct = currentPage * productsPerPage
+  const indexOfFirstProduct = indexOfLastProduct - productsPerPage
+  const currentProducts = filteredProducts.slice(indexOfFirstProduct, indexOfLastProduct)
+  const totalPages = Math.ceil(filteredProducts.length / productsPerPage)
+
+  // Change page
+  const paginate = (pageNumber) => setCurrentPage(pageNumber)
 
 
 
@@ -463,6 +490,33 @@ const AdminDashboard = () => {
         </button>
       </div>
 
+      {/* Search Bar */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="flex items-center space-x-4">
+          <div className="flex-1">
+            <input
+              type="text"
+              placeholder="Search products by name, category, gender, or brand..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+            />
+          </div>
+          {searchTerm && (
+            <button
+              onClick={() => setSearchTerm('')}
+              className="px-4 py-3 text-gray-500 hover:text-gray-700 transition-colors"
+              title="Clear search"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
+          <div className="text-sm text-gray-600">
+            Showing {currentProducts.length} of {filteredProducts.length} products
+          </div>
+        </div>
+      </div>
+
       {loading ? (
         <div className="text-center py-8">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
@@ -480,13 +534,27 @@ const AdminDashboard = () => {
              Add Product
            </button>
          </div>
-       ) : (
-         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-           <div className="p-6 border-b border-gray-200">
-             <h2 className="text-lg font-semibold text-gray-900">All Products ({safeProducts.length})</h2>
-           </div>
-           <div className="divide-y divide-gray-200">
-             {safeProducts.map((product) => (
+               ) : filteredProducts.length === 0 ? (
+         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 text-center">
+           <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+           <h3 className="text-lg font-medium text-gray-900 mb-2">No products found</h3>
+           <p className="text-gray-500 mb-4">Try adjusting your search terms</p>
+           <button
+             onClick={() => setSearchTerm('')}
+             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+           >
+             Clear Search
+           </button>
+         </div>
+               ) : (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="p-6 border-b border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-900">
+                All Products ({filteredProducts.length} found, {safeProducts.length} total)
+              </h2>
+            </div>
+            <div className="divide-y divide-gray-200">
+              {currentProducts.map((product) => (
               <div key={product._id} className="p-6 hover:bg-gray-50 transition-colors">
                 <div className="flex items-center space-x-4">
                   {product.images?.[0] ? (
@@ -522,7 +590,7 @@ const AdminDashboard = () => {
                        <Eye className="w-5 h-5" />
                      </a>
                      <button 
-                       onClick={() => debugProduct(product)} 
+                       onClick={() => console.log('Product:', product)} 
                        className="p-2 text-gray-400 hover:text-purple-600 transition-colors"
                        title="Debug Product"
                      >
@@ -547,6 +615,59 @@ const AdminDashboard = () => {
               </div>
             ))}
           </div>
+          
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-gray-700">
+                  Page {currentPage} of {totalPages} ({indexOfFirstProduct + 1}-{Math.min(indexOfLastProduct, filteredProducts.length)} of {filteredProducts.length} products)
+                </div>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => paginate(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                      currentPage === 1
+                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                        : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                    }`}
+                  >
+                    Previous
+                  </button>
+                  
+                  {/* Page Numbers */}
+                  <div className="flex items-center space-x-1">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((number) => (
+                      <button
+                        key={number}
+                        onClick={() => paginate(number)}
+                        className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                          currentPage === number
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                        }`}
+                      >
+                        {number}
+                      </button>
+                    ))}
+                  </div>
+                  
+                  <button
+                    onClick={() => paginate(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                      currentPage === totalPages
+                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                        : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                    }`}
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
