@@ -33,10 +33,13 @@ const Login = () => {
       if (container) {
         ;(window).google.accounts.id.renderButton(container, {
           type: 'standard',
-          theme: 'outline',
+          theme: 'filled_black',
+          text: 'continue_with',
           size: 'large',
           shape: 'pill',
+          logo_alignment: 'left',
           width: 320,
+          locale: 'en'
         })
       }
       // Probe One Tap availability
