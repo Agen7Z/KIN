@@ -5,6 +5,7 @@ import NavBar from '../components/Common/NavBar'
 import { useCart } from '../hooks/useCart'
 import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../hooks/useToast'
+import apiFetch from '../utils/api'
 
 const provinces = [
   'Koshi',
@@ -112,7 +113,7 @@ const Checkout = () => {
         paymentInfo: payment,
       }
       
-      const res = await fetch('/api/orders', {
+      const res = await apiFetch('/api/orders', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import apiFetch from '../utils/api'
 import NavBar from '../components/Common/NavBar'
 import Hero from '../components/Common/Hero'
 import GenderSection from '../components/Common/GenderSection'
@@ -9,7 +10,7 @@ const Home = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await fetch('/api/products')
+        const response = await apiFetch('/api/products')
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`)

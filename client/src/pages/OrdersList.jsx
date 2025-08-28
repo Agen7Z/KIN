@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import apiFetch from '../utils/api'
 import NavBar from '../components/Common/NavBar'
 
 const OrdersList = () => {
@@ -13,7 +14,7 @@ const OrdersList = () => {
         const raw = localStorage.getItem('kin_auth')
         const token = raw ? JSON.parse(raw).token : null
         if (!token) throw new Error('Unauthorized')
-        const res = await fetch('/api/orders/mine', { headers: { Authorization: `Bearer ${token}` } })
+        const res = await apiFetch('/api/orders/mine', { headers: { Authorization: `Bearer ${token}` } })
         if (!res.ok) throw new Error('Failed to load orders')
         const json = await res.json()
         setOrders(json?.data?.orders || [])

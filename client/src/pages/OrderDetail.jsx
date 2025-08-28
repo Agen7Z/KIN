@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import apiFetch from '../utils/api'
 import { useParams } from 'react-router-dom'
 import NavBar from '../components/Common/NavBar'
 
@@ -14,7 +15,7 @@ const OrderDetail = () => {
         setLoading(true)
         const raw = localStorage.getItem('kin_auth')
         const token = raw ? JSON.parse(raw).token : null
-        const res = await fetch(`/api/orders/${id}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+        const res = await apiFetch(`/api/orders/${id}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} })
         if (!res.ok) throw new Error('Failed to load order')
         const json = await res.json()
         setOrder(json?.data?.order || null)

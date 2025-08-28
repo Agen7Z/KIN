@@ -4,6 +4,7 @@ import NavBar from '../components/Common/NavBar'
 import ProductCard from '../components/Products/ProductCard'
 import { useCart } from '../hooks/useCart'
 import { useAuth } from '../hooks/useAuth'
+import apiFetch from '../utils/api'
 
 
 const useProducts = (category, gender) => {
@@ -16,7 +17,7 @@ const useProducts = (category, gender) => {
         const params = new URLSearchParams()
         if (category) params.set('category', category)
         if (gender && gender !== 'all') params.set('gender', gender)
-        const res = await fetch(`/api/products?${params.toString()}`)
+        const res = await apiFetch(`/api/products?${params.toString()}`)
         const json = await res.json()
         setData(json?.data?.products || [])
       } catch {
@@ -35,7 +36,7 @@ const useTrending = () => {
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await fetch('/api/products/trending/top')
+        const res = await apiFetch('/api/products/trending/top')
         const json = await res.json()
         setData(json?.data?.products || [])
       } catch {

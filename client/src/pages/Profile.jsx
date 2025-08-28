@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import apiFetch from '../utils/api'
 import NavBar from '../components/Common/NavBar'
 import { useAuth } from '../hooks/useAuth'
 
@@ -16,7 +17,7 @@ const Profile = () => {
         const parsed = raw ? JSON.parse(raw) : null
         const token = parsed?.token
         if (!token) throw new Error('Unauthorized')
-        const res = await fetch('/api/orders/mine', { headers: { Authorization: `Bearer ${token}` } })
+        const res = await apiFetch('/api/orders/mine', { headers: { Authorization: `Bearer ${token}` } })
         if (!res.ok) throw new Error('Failed to load orders')
         const json = await res.json()
         setOrders(json?.data?.orders || [])

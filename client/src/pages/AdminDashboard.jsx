@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react'
+import apiFetch from '../utils/api'
 import { Package, Users, ShoppingCart, Plus, Trash2, Eye, Edit3, Home, DollarSign, TrendingUp, Star, Menu, X } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import ImageUpload from '../components/Admin/ImageUpload.jsx'
@@ -54,9 +55,9 @@ const AdminDashboard = () => {
 
       // Fetch all data in parallel
       const [usersRes, ordersRes, productsRes] = await Promise.all([
-        fetch('/api/users', { headers }),
-        fetch('/api/orders', { headers }),
-        fetch('/api/products', { headers })
+        apiFetch('/api/users', { headers }),
+        apiFetch('/api/orders', { headers }),
+        apiFetch('/api/products', { headers })
       ])
 
       if (usersRes.ok) {
@@ -126,7 +127,7 @@ const AdminDashboard = () => {
 
 
        
-       const response = await fetch('/api/products', {
+       const response = await apiFetch('/api/products', {
          method: 'POST',
          headers: {
            'Authorization': `Bearer ${token}`,
@@ -184,7 +185,7 @@ const AdminDashboard = () => {
       const token = localStorage.getItem('kin_auth') ? JSON.parse(localStorage.getItem('kin_auth')).token : null
       if (!token) return
 
-      const response = await fetch(`/api/products/${id}`, {
+      const response = await apiFetch(`/api/products/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -217,7 +218,7 @@ const AdminDashboard = () => {
       const token = localStorage.getItem('kin_auth') ? JSON.parse(localStorage.getItem('kin_auth')).token : null
       if (!token) return
 
-      const response = await fetch(`/api/users/${id}`, {
+      const response = await apiFetch(`/api/users/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -270,7 +271,7 @@ const AdminDashboard = () => {
        const token = localStorage.getItem('kin_auth') ? JSON.parse(localStorage.getItem('kin_auth')).token : null
        if (!token) return
 
-      const response = await fetch(`/api/orders/${id}`, {
+      const response = await apiFetch(`/api/orders/${id}`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,

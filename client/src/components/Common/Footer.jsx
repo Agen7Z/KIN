@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import apiFetch from '../../utils/api'
 
 const Footer = () => {
   const col = 'space-y-4'
@@ -18,7 +19,7 @@ const Footer = () => {
     try {
       // Try server-side subscribe to avoid ad blockers
       try {
-        const apiRes = await fetch('/api/users/subscribe', {
+        const apiRes = await apiFetch('/api/users/subscribe', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
           body: JSON.stringify({ email })

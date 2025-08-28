@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect } from 'react'
+import apiFetch from '../utils/api'
 
 const AuthContext = createContext()
 
@@ -13,7 +14,7 @@ export const AuthProvider = ({ children }) => {
       if (localStorage.getItem(flagKey)) return
       // Try server-side first (less likely to be blocked)
       try {
-        const apiRes = await fetch('/api/users/subscribe', {
+        const apiRes = await apiFetch('/api/users/subscribe', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
           body: JSON.stringify({ email })
@@ -59,7 +60,7 @@ export const AuthProvider = ({ children }) => {
               return
             }
 
-            const response = await fetch('/api/users/me', {
+            const response = await apiFetch('/api/users/me', {
               method: 'GET',
               headers: {
                 'Authorization': `Bearer ${token}`,
@@ -98,7 +99,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const response = await fetch('/api/auth/login', {
+      const response = await apiFetch('/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -131,7 +132,7 @@ export const AuthProvider = ({ children }) => {
 
   const signup = async (email, password) => {
     try {
-      const response = await fetch('/api/auth/register', {
+      const response = await apiFetch('/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -164,7 +165,7 @@ export const AuthProvider = ({ children }) => {
     try {
       // The credentialPayload comes from Google Identity Services (JWT). We should verify on server.
       // For simplicity, send it to our backend to decode/verify and return our JWT.
-      const response = await fetch('/api/auth/google', {
+      const response = await apiFetch('/api/auth/google', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
