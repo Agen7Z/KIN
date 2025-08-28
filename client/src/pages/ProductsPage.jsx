@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import { useParams, useLocation } from 'react-router-dom'
 import NavBar from '../components/Common/NavBar'
 import ProductCard from '../components/Products/ProductCard'
-import { useCart } from '../context/CartContext'
-import { useAuth } from '../context/AuthContext'
+import { useCart } from '../hooks/useCart'
+import { useAuth } from '../hooks/useAuth'
 
 
 const useProducts = (category, gender) => {
@@ -30,6 +30,23 @@ const useProducts = (category, gender) => {
   return { data, loading }
 }
 
+const useTrending = () => {
+  const [data, setData] = useState([])
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await fetch('/api/products/trending/top')
+        const json = await res.json()
+        setData(json?.data?.products || [])
+      } catch {
+        setData([])
+      }
+    }
+    load()
+  }, [])
+  return data
+}
+
 const ProductsPage = () => {
   const { addItem } = useCart()
   const { user } = useAuth()
@@ -37,29 +54,30 @@ const ProductsPage = () => {
   const location = useLocation()
   
   // Extract gender from URL path
-  const getGenderFromPath = () => {
+  const getGenderFromPath = useCallback(() => {
     const path = location.pathname
     if (path === '/men' || path === '/products/men') return 'men'
     if (path === '/women' || path === '/products/women') return 'women'
     if (path === '/unisex' || path === '/products/unisex') return 'unisex'
     return 'all'
-  }
+  }, [location.pathname])
   
   const [isFilterOpen, setIsFilterOpen] = useState(false)
   const [quickViewProduct, setQuickViewProduct] = useState(null)
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false)
   const [query, setQuery] = useState('')
-  const [selectedPrices, setSelectedPrices] = useState([]) // ['under-50','50-100','100-200','200-plus']
-  const [selectedCollections, setSelectedCollections] = useState([]) // ['new','trending','summer','signature']
+  const [selectedPrices, setSelectedPrices] = useState([])
+  const [selectedCollections, setSelectedCollections] = useState([]) // ['new','trending','signature']
   const [sortBy, setSortBy] = useState('Featured')
-  const [selectedGender, setSelectedGender] = useState(getGenderFromPath()) // 'all', 'men', 'women', 'unisex'
+  const [selectedGender, setSelectedGender] = useState(getGenderFromPath())
   
   const { data: products } = useProducts(category, selectedGender)
+  const trendingProducts = useTrending()
   
   // Update selectedGender when URL changes
   useEffect(() => {
     setSelectedGender(getGenderFromPath())
-  }, [location.pathname])
+  }, [getGenderFromPath])
   
   const toggleArrayValue = (arr, value) => (
     arr.includes(value) ? arr.filter((v) => v !== value) : [...arr, value]
@@ -72,7 +90,7 @@ const ProductsPage = () => {
     setSelectedPrices([])
     setSelectedCollections([])
     setSortBy('Featured')
-    setSelectedGender(getGenderFromPath()) // Reset to URL-based gender
+    setSelectedGender(getGenderFromPath())
   }
   
   const withinPrice = (price, range) => {
@@ -83,13 +101,19 @@ const ProductsPage = () => {
     return true
   }
   
+  const newArrivalsSet = new Set(products
+    .slice() // clone
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    .slice(0, 10)
+    .map(p => String(p._id)))
+  const trendingSet = new Set((trendingProducts || []).slice(0, 10).map(p => String(p._id)))
+  
   const matchesCollections = (p) => {
     if (selectedCollections.length === 0) return true
     return selectedCollections.every((c) => {
-      if (c === 'new') return !!p.isNew
-      if (c === 'trending') return !!p.isTrending
-      if (c === 'summer') return (p.category || '').toLowerCase().includes('summer')
-      if (c === 'signature') return (p.category || '').toLowerCase().includes('signature')
+      if (c === 'new') return newArrivalsSet.has(String(p._id))
+      if (c === 'trending') return trendingSet.has(String(p._id))
+      if (c === 'signature') return (p.brand || '').toLowerCase() === 'kinn'
       return true
     })
   }
@@ -118,7 +142,7 @@ const ProductsPage = () => {
     const arr = [...filteredProducts]
     if (sortBy === 'Price: Low to High') arr.sort((a, b) => (a.price || 0) - (b.price || 0))
     else if (sortBy === 'Price: High to Low') arr.sort((a, b) => (b.price || 0) - (a.price || 0))
-    else if (sortBy === 'Newest First') arr.sort((a, b) => (b.isNew === true) - (a.isNew === true) || (b.id || 0) - (a.id || 0))
+    else if (sortBy === 'Newest First') arr.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
     else if (sortBy === 'Best Selling') arr.sort((a, b) => (b.reviews || 0) - (a.reviews || 0))
     return arr
   })()
@@ -243,8 +267,6 @@ const ProductsPage = () => {
                 </div>
               </div>
 
-              {/* Gender Filter removed as per requirement */}
-
               {/* Collections */}
               <div className="pb-6 border-b border-gray-100">
                 <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-6">
@@ -252,10 +274,9 @@ const ProductsPage = () => {
                 </h3>
                 <div className="space-y-4">
                   {[ 
-                    { label: 'New Arrivals', value: 'new', count: 24 },
-                    { label: 'Trending', value: 'trending', count: 18 },
-                    { label: 'Summer Collection', value: 'summer', count: 32 },
-                    { label: 'Signature Series', value: 'signature', count: 12 }
+                    { label: 'New Arrivals', value: 'new' },
+                    { label: 'Trending (Top 10 sold)', value: 'trending' },
+                    { label: 'Signature Series (KINN)', value: 'signature' }
                   ].map((collection) => (
                     <label key={collection.value} className="flex items-center justify-between group cursor-pointer">
                       <div className="flex items-center">
@@ -276,7 +297,6 @@ const ProductsPage = () => {
                           {collection.label}
                         </span>
                       </div>
-                      <span className="text-gray-400 text-sm">({collection.count})</span>
                     </label>
                   ))}
                 </div>
@@ -327,6 +347,9 @@ const ProductsPage = () => {
                   onAddToCart={() => {
                     if (!user) {
                       window.location.href = '/login'
+                      return
+                    }
+                    if (user.role === 'admin') {
                       return
                     }
                     addItem(product, 1)
@@ -382,6 +405,9 @@ const ProductsPage = () => {
                   onClick={() => {
                     if (!user) {
                       window.location.href = '/login'
+                      return
+                    }
+                    if (user.role === 'admin') {
                       return
                     }
                     addItem(quickViewProduct, 1)

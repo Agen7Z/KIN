@@ -4,36 +4,30 @@ import AppError from "../utils/appError.js";
 
 export const protect = async (req, res, next) => {
     try {
-        console.log('Auth headers:', req.headers.authorization);
-        console.log('JWT_SECRET exists:', !!process.env.JWT_SECRET);
-        
         let token;
-        if (req.headers.authorization && req.headers.authorization.startsWith("Bearer ")) {
-            token = req.headers.authorization.split(" ")[1];
+        
+        if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+            token = req.headers.authorization.split(' ')[1];
         } else if (req.cookies && req.cookies.token) {
             token = req.cookies.token;
         }
-
-        if (!token) {
-            return next(new AppError("Not authorized, token missing", 401));
-        }
-
-        console.log('Token extracted:', token ? 'Yes' : 'No');
-
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        console.log('Token decoded:', decoded);
         
-        const user = await User.findById(decoded.id).select("_id role");
-        if (!user) {
-            return next(new AppError("The user belonging to this token no longer exists", 401));
+        if (!token) {
+            return next(new AppError('You are not logged in. Please log in to get access.', 401));
         }
-
-        req.user = { id: user._id.toString(), role: user.role };
-        console.log('User set in req:', req.user);
+        
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        
+        const currentUser = await User.findById(decoded.id);
+        if (!currentUser) {
+            return next(new AppError('The user belonging to this token no longer exists.', 401));
+        }
+        
+        req.user = currentUser;
+        
         next();
     } catch (error) {
-        console.error('Auth middleware error:', error);
-        next(error);
+        return next(new AppError('Invalid token. Please log in again.', 401));
     }
 };
 

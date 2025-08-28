@@ -32,6 +32,22 @@ const ProductCard = ({
   const isNew = product?.isNew
   const isTrending = product?.isTrending
 
+  const handleQuickView = (e) => {
+    if (e) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+    if (onQuickView) onQuickView()
+  }
+
+  const handleAddToCart = (e) => {
+    if (e) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+    if (onAddToCart) onAddToCart()
+  }
+
   const formattedPrice = typeof cardPrice === 'number' ? `Rs. ${cardPrice.toFixed(2)}` : cardPrice
   const formattedOriginal = typeof cardOriginal === 'number' ? `Rs. ${cardOriginal.toFixed(2)}` : cardOriginal
   const discount =
@@ -42,16 +58,14 @@ const ProductCard = ({
   return (
     <article className="group relative overflow-hidden rounded-2xl border border-white/20 bg-white/70 backdrop-blur-md shadow-[0_10px_30px_-10px_rgba(0,0,0,0.25)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.35)]">
       <div className="absolute inset-0 rounded-2xl p-[1px] bg-gradient-to-br from-white/60 via-white/20 to-transparent pointer-events-none" />
-      <div className="relative aspect-[4/3] w-full overflow-hidden bg-gray-50">
+      <Link to={`/product/${product?.slug || product?._id || product?.id || ''}`} state={{ product }} className="relative block aspect-[4/3] w-full overflow-hidden bg-gray-50">
         {cardImage ? (
-          <Link to={`/product/${product?.slug || product?._id || product?.id || ''}`} state={{ product }}>
             <img
               src={cardImage}
               alt={cardTitle}
               className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
               loading="lazy"
             />
-          </Link>
         ) : null}
 
         {(isNew || isTrending) && (
@@ -72,23 +86,23 @@ const ProductCard = ({
 
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/25 to-transparent" />
 
-        <div className="absolute inset-0 hidden items-end justify-center gap-3 p-4 sm:flex">
+        <div className="absolute inset-0 hidden items-end justify-center gap-3 p-4 sm:flex pointer-events-none">
           <button
             type="button"
-            onClick={onQuickView}
+            onClick={handleQuickView}
             className="pointer-events-auto inline-flex items-center justify-center rounded-full bg-white/90 px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-gray-200 transition hover:bg-white hover:shadow-md"
           >
             Quick view
           </button>
           <button
             type="button"
-            onClick={onAddToCart}
+            onClick={handleAddToCart}
             className="pointer-events-auto inline-flex items-center justify-center rounded-full bg-gray-900 px-4 py-2 text-sm font-semibold text-white shadow-sm ring-1 ring-black/5 transition hover:bg-black hover:shadow-md"
           >
             Add to cart
           </button>
         </div>
-      </div>
+      </Link>
 
       <div className="space-y-2 p-4">
         <div className="flex items-center gap-2">
@@ -134,14 +148,14 @@ const ProductCard = ({
         <div className="mt-2 flex gap-2 sm:hidden">
           <button
             type="button"
-            onClick={onAddToCart}
+            onClick={handleAddToCart}
             className="inline-flex flex-1 items-center justify-center rounded-full bg-gray-900 px-4 py-2 text-sm font-semibold text-white shadow-sm ring-1 ring-black/5 transition hover:bg-black"
           >
             Add to cart
           </button>
           <button
             type="button"
-            onClick={onQuickView}
+            onClick={handleQuickView}
             className="inline-flex items-center justify-center rounded-full bg-white px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-gray-200 transition hover:bg-white/90"
           >
             View

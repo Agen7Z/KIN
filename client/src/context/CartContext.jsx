@@ -1,80 +1,114 @@
-import React, { createContext, useContext, useMemo, useState, useCallback } from 'react'
+import React, { createContext, useState, useEffect } from 'react'
 
-const CartContext = createContext(null)
+const CartContext = createContext()
 
 export const CartProvider = ({ children }) => {
-  const [items, setItems] = useState([]) // [{ id, product, quantity }]
+  const STORAGE_KEY = 'kin_cart'
+  const [items, setItems] = useState(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY)
+      return raw ? JSON.parse(raw) : []
+    } catch {
+      return []
+    }
+  })
   const [isOpen, setIsOpen] = useState(false)
 
-  const addItem = useCallback((product, quantity = 1) => {
-    setItems((prev) => {
-      const index = prev.findIndex((entry) => entry.product.id === product.id)
-      if (index !== -1) {
-        const next = [...prev]
-        next[index] = { ...next[index], quantity: next[index].quantity + quantity }
-        return next
-      }
-      return [...prev, { id: product.id, product, quantity }]
-    })
-  }, [])
-
-  const removeItem = useCallback((productId) => {
-    setItems((prev) => prev.filter((entry) => entry.product.id !== productId))
-  }, [])
-
-  const clear = useCallback(() => setItems([]), [])
-
-  const increase = useCallback((productId, amount = 1) => {
-    setItems((prev) => prev.map((e) => e.product.id === productId ? { ...e, quantity: e.quantity + amount } : e))
-  }, [])
-
-  const decrease = useCallback((productId, amount = 1) => {
-    setItems((prev) => prev
-      .map((e) => e.product.id === productId ? { ...e, quantity: Math.max(1, e.quantity - amount) } : e)
-    )
-  }, [])
-
-  const setQuantity = useCallback((productId, quantity) => {
-    const q = Math.max(1, Number(quantity) || 1)
-    setItems((prev) => prev.map((e) => e.product.id === productId ? { ...e, quantity: q } : e))
-  }, [])
-
-  const open = useCallback(() => setIsOpen(true), [])
-  const close = useCallback(() => setIsOpen(false), [])
-  const toggle = useCallback(() => setIsOpen((v) => !v), [])
-
-  const { count, total } = useMemo(() => {
-    const count = items.reduce((sum, entry) => sum + entry.quantity, 0)
-    const total = items.reduce((sum, entry) => sum + (Number(entry.product.price) || 0) * entry.quantity, 0)
-    return { count, total }
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
   }, [items])
 
-  const value = useMemo(
-    () => ({
-      items,
-      addItem,
-      removeItem,
-      clear,
-      increase,
-      decrease,
-      setQuantity,
-      count,
-      total,
-      isOpen,
-      open,
-      close,
-      toggle,
-    }),
-    [items, addItem, removeItem, clear, increase, decrease, setQuantity, count, total, isOpen, open, close, toggle]
+  const addItem = (product, quantity = 1) => {
+    setItems(prevItems => {
+      const existingItem = prevItems.find(item => item._id === product._id)
+      if (existingItem) {
+        return prevItems.map(item =>
+          item._id === product._id
+            ? { ...item, quantity: item.quantity + quantity }
+            : item
+        )
+      } else {
+        return [...prevItems, { ...product, quantity }]
+      }
+    })
+  }
+
+  const removeItem = (productId) => {
+    setItems(prevItems => prevItems.filter(item => item._id !== productId))
+  }
+
+  const updateQuantity = (productId, quantity) => {
+    if (quantity <= 0) {
+      removeItem(productId)
+      return
+    }
+    setItems(prevItems =>
+      prevItems.map(item =>
+        item._id === productId ? { ...item, quantity } : item
+      )
+    )
+  }
+
+  const increase = (productId) => {
+    setItems(prevItems =>
+      prevItems.map(item =>
+        item._id === productId ? { ...item, quantity: item.quantity + 1 } : item
+      )
+    )
+  }
+
+  const decrease = (productId) => {
+    setItems(prevItems =>
+      prevItems.map(item => {
+        if (item._id === productId) {
+          if (item.quantity <= 1) {
+            return null // Will be filtered out
+          }
+          return { ...item, quantity: item.quantity - 1 }
+        }
+        return item
+      }).filter(Boolean) // Remove null items
+    )
+  }
+
+  const clearCart = () => {
+    setItems([])
+  }
+
+  const toggle = () => {
+    setIsOpen(prev => !prev)
+  }
+
+  const close = () => {
+    setIsOpen(false)
+  }
+
+  const total = items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+  const count = items.reduce((sum, item) => sum + item.quantity, 0)
+
+  const value = {
+    items,
+    isOpen,
+    addItem,
+    removeItem,
+    updateQuantity,
+    increase,
+    decrease,
+    clearCart,
+    total,
+    count,
+    toggle,
+    close
+  }
+
+  return (
+    <CartContext.Provider value={value}>
+      {children}
+    </CartContext.Provider>
   )
-
-  return <CartContext.Provider value={value}>{children}</CartContext.Provider>
 }
 
-export const useCart = () => {
-  const ctx = useContext(CartContext)
-  if (!ctx) throw new Error('useCart must be used within a CartProvider')
-  return ctx
-}
+export { CartContext }
+export default CartProvider
 
 

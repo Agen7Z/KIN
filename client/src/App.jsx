@@ -1,8 +1,9 @@
 import React from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext.jsx'
 import { CartProvider } from './context/CartContext.jsx'
 import { ToastProvider } from './context/ToastContext.jsx'
+import { useAuth } from './hooks/useAuth.js'
 
 import Home from './pages/Home'
 import ProductsPage from './pages/ProductsPage'
@@ -12,6 +13,27 @@ import Login from './pages/Login'
 import Signup from './pages/Signup'
 import Profile from './pages/Profile'
 import AdminDashboard from './pages/AdminDashboard'
+import Checkout from './pages/Checkout'
+import OrderDetail from './pages/OrderDetail'
+
+// Protected Route Component
+const ProtectedRoute = ({ children, requiredRole = null }) => {
+  const { user, loading } = useAuth()
+  
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>
+  }
+  
+  if (!user) {
+    return <Navigate to="/login" replace />
+  }
+  
+  if (requiredRole && user.role !== requiredRole) {
+    return <Navigate to="/" replace />
+  }
+  
+  return children
+}
 
 const App = () => {
   return (
@@ -28,8 +50,10 @@ const App = () => {
             <Route path='/product/:id' element={<ProductDetail />} />
             <Route path='/login' element={<Login />} />
             <Route path='/signup' element={<Signup />} />
-            <Route path='/profile' element={<Profile />} />
-            <Route path='/admin' element={<AdminDashboard />} />
+            <Route path='/profile' element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            <Route path='/admin' element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />
+            <Route path='/checkout' element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
+            <Route path='/orders/:id' element={<ProtectedRoute><OrderDetail /></ProtectedRoute>} />
           </Routes>
           <CartDrawer />
           </ToastProvider>

@@ -27,12 +27,9 @@ const orderSchema = new mongoose.Schema(
         trackingNumber: { type: String, default: "" },
         shippingAddress: {
             fullName: String,
-            address1: String,
-            address2: String,
-            city: String,
-            state: String,
-            postalCode: String,
-            country: String,
+            province: String,
+            district: String,
+            mainAddress: String,
         },
         paymentInfo: {
             provider: { type: String, default: "cod" },

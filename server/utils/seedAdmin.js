@@ -7,8 +7,12 @@ const seedAdmin = async () => {
     const exists = await User.findOne({ email: ADMIN_EMAIL });
     if (exists) return;
     const hashed = await bcrypt.hash(ADMIN_PASSWORD, 10);
-    await User.create({ username: ADMIN_USERNAME, email: ADMIN_EMAIL, password: hashed, role: "admin" });
-    console.log("Seeded admin user:", ADMIN_EMAIL);
+    try {
+        await User.create({ username: ADMIN_USERNAME, email: ADMIN_EMAIL, password: hashed, role: "admin" });
+        // console.log("Seeded admin user:", ADMIN_EMAIL);
+    } catch (error) {
+        // console.log("Admin user already exists or error occurred:", error.message);
+    }
 };
 
 export default seedAdmin;

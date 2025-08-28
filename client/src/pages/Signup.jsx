@@ -1,16 +1,27 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import NavBar from '../components/Common/NavBar'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../hooks/useAuth'
 
 const Signup = () => {
-  const { signup } = useAuth()
+  const { signup, user } = useAuth()
   const navigate = useNavigate()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      if (user.role === 'admin') {
+        navigate('/admin')
+      } else {
+        navigate('/')
+      }
+    }
+  }, [user, navigate])
 
   const onSubmit = async (e) => {
     e.preventDefault()
@@ -21,8 +32,13 @@ const Signup = () => {
     }
     setLoading(true)
     try {
-      await signup(email, password, name)
-    } catch (err) {
+      const result = await signup(email, password, name)
+      if (result.success) {
+        // Navigation will be handled by useEffect above
+      } else {
+        setError(result.error || 'Signup failed')
+      }
+    } catch (error) {
       setError('Signup failed')
     } finally {
       setLoading(false)

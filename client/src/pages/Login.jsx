@@ -1,28 +1,42 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import NavBar from '../components/Common/NavBar'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../hooks/useAuth'
 
 const Login = () => {
-  const { login } = useAuth()
+  const { login, user } = useAuth()
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      if (user.role === 'admin') {
+        navigate('/admin')
+      } else {
+        navigate('/')
+      }
+    }
+  }, [user, navigate])
 
   const onSubmit = async (e) => {
     e.preventDefault()
-    setError('')
     if (!email || !password) {
-      setError('Please enter email and password')
+      alert('Please enter email and password')
       return
     }
     setLoading(true)
     try {
-      await login(email, password)
-    } catch (err) {
-      setError('Login failed')
+      const result = await login(email, password)
+      if (result.success) {
+        // Navigation will be handled by useEffect above
+      } else {
+        alert(result.error || 'Login failed')
+      }
+    } catch (error) {
+      alert('Login failed')
     } finally {
       setLoading(false)
     }
@@ -36,7 +50,6 @@ const Login = () => {
         <p className="mt-1 text-gray-600">Sign in to continue</p>
 
         <form onSubmit={onSubmit} className="mt-8 space_y-4">
-          {error && <p className="text-sm text-red-600">{error}</p>}
           <div>
             <label className="block text-sm font-medium text-gray-700">Email</label>
             <input

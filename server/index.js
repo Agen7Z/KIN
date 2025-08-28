@@ -10,6 +10,7 @@ import userRoutes from "./routes/user.routes.js";
 import productRoutes from "./routes/product.routes.js";
 import orderRoutes from "./routes/order.routes.js";
 import { notFound, errorHandler } from "./middlewares/error.middleware.js";
+import { protect } from "./middlewares/auth.middleware.js";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -22,36 +23,42 @@ dotenv.config();
 // Temporary fix: Set JWT_SECRET if not loaded from .env
 if (!process.env.JWT_SECRET) {
     process.env.JWT_SECRET = 'temporary_secret_key_for_testing';
-    console.log('⚠️  Using temporary JWT_SECRET - fix your .env file!');
+    // console.log('⚠️  Using temporary JWT_SECRET - fix your .env file!');
 }
 
 // Debug: Log all environment variables
-console.log('=== Environment Variables Debug ===');
-console.log('JWT_SECRET:', process.env.JWT_SECRET ? 'SET' : 'NOT SET');
-console.log('MONGO_URI:', process.env.MONGO_URI ? 'SET' : 'NOT SET');
-console.log('PORT:', process.env.PORT || 'NOT SET (will use default 3000)');
-console.log('NODE_ENV:', process.env.NODE_ENV || 'NOT SET');
-console.log('==================================');
+// console.log('=== Environment Variables Debug ===');
+// console.log('JWT_SECRET:', process.env.JWT_SECRET ? 'SET' : 'NOT SET');
+// console.log('MONGO_URI:', process.env.MONGO_URI ? 'SET' : 'NOT SET');
+// console.log('PORT:', process.env.PORT || 'NOT SET (will use default 3000)');
+// console.log('NODE_ENV:', process.env.NODE_ENV || 'NOT SET');
+// console.log('==================================');
 
 // Check required environment variables
 
 if (!process.env.MONGO_URI) {
     console.error('MONGO_URI is not set in environment variables');
+    console.error('Please create a .env file with MONGO_URI=mongodb://localhost:27017/kin');
+    console.error('Or install MongoDB and set the connection string');
     process.exit(1);
 }
 
-console.log('Environment variables loaded successfully');
+// console.log('Environment variables loaded successfully');
 
 
 const app = express();
 
 // CORS configuration - more permissive for development
 app.use(cors({
-    origin: ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:3001'],
+    origin: ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:3001', 'http://localhost:4000'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Cookie']
+    allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'Accept'],
+    exposedHeaders: ['Content-Length', 'X-Requested-With']
 }));
+
+// Pre-flight requests
+app.options('*', cors());
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -72,13 +79,33 @@ app.get("/api/test", (req, res) => {
     res.json({ message: "Server is working!" });
 });
 
+// Test auth endpoint
+app.get("/api/test-auth", (req, res) => {
+    const authHeader = req.headers.authorization;
+    res.json({ 
+        message: "Auth test endpoint", 
+        hasAuthHeader: !!authHeader,
+        authHeader: authHeader,
+        timestamp: new Date().toISOString()
+    });
+});
+
+// Test protected endpoint
+app.get("/api/test-protected", protect, (req, res) => {
+    res.json({ 
+        message: "Protected endpoint working!", 
+        user: req.user,
+        timestamp: new Date().toISOString()
+    });
+});
+
 // Health check endpoint
 app.get("/api/health", (req, res) => {
     res.json({ 
         status: "success", 
         message: "Server is running", 
         timestamp: new Date().toISOString(),
-        port: process.env.PORT || 3000
+        port: process.env.PORT || 4000
     });
 });
 
@@ -86,11 +113,28 @@ app.get("/api/health", (req, res) => {
 app.get("/api/test-products", async (req, res) => {
     try {
         const Product = (await import("./models/product.model.js")).default;
+        
         const products = await Product.find({});
+        
         res.json({ 
             message: "Products test", 
             count: products.length, 
             products: products.map(p => ({ id: p._id, name: p.name, gender: p.gender, isActive: p.isActive }))
+        });
+    } catch (error) {
+        res.status(500).json({ 
+            error: error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
+    }
+});
+
+// Simple products endpoint test
+app.get("/api/products-test", async (req, res) => {
+    try {
+        res.json({ 
+            message: "Simple products endpoint working!",
+            timestamp: new Date().toISOString()
         });
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -100,13 +144,13 @@ app.get("/api/test-products", async (req, res) => {
 app.use(notFound);
 app.use(errorHandler);
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 4000;
 const server = app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
+    // Server started successfully
 });
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
-    console.log('Unhandled Rejection:', err);
+    // console.log('Unhandled Rejection:', err);
     server.close(() => process.exit(1));
 });

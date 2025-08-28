@@ -48,31 +48,26 @@ export const registerUser = async (req, res, next) => {
 
 export const loginUser = async (req, res, next) => {
     try {
-        console.log('Login attempt with body:', req.body);
         const { email, password } = req.body;
+        
         if (!email || !password) {
-            console.log('Missing email or password');
             return next(new AppError("email and password are required", 400));
         }
-
-        console.log('Looking for user with email:', email);
+        
         const user = await User.findOne({ email });
+        
         if (!user) {
-            console.log('User not found with email:', email);
             return next(new AppError("Invalid credentials", 401));
         }
-
-        console.log('User found, checking password...');
+        
         const isMatch = await bcrypt.compare(password, user.password);
+        
         if (!isMatch) {
-            console.log('Password mismatch for user:', email);
             return next(new AppError("Invalid credentials", 401));
         }
-
-        console.log('Password match, generating token...');
+        
         const token = signToken(user._id);
-
-        console.log('Login successful for user:', email);
+        
         res.status(200).json({
             status: "success",
             data: {
@@ -86,7 +81,6 @@ export const loginUser = async (req, res, next) => {
             },
         });
     } catch (error) {
-        console.error('Error in loginUser:', error);
         next(error);
     }
 };

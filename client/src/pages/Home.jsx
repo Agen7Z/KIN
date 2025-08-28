@@ -4,25 +4,24 @@ import Hero from '../components/Common/Hero'
 import GenderSection from '../components/Common/GenderSection'
 
 const Home = () => {
-  const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        setLoading(true)
         const response = await fetch('/api/products')
+        
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`)
         }
+        
         const data = await response.json()
-        console.log('Products response:', data)
-        const productsList = data?.data?.products || data?.products || []
-        console.log('Extracted products:', productsList)
-        setProducts(productsList)
+        
+        if (data.success) {
+          // Products loaded successfully
+        }
       } catch (error) {
-        console.error('Error fetching products:', error)
-        setProducts([])
+        // Handle error silently
       } finally {
         setLoading(false)
       }

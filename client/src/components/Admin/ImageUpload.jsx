@@ -40,9 +40,9 @@ const ImageUpload = ({ onImagesChange, currentImages = [] }) => {
       const newImages = [...images, ...uploadedUrls]
       setImages(newImages)
       onImagesChange(newImages)
-    } catch (error) {
-      console.error('Upload error:', error)
-      alert('Failed to upload images. Please try again.')
+    } catch {
+      // console.error('Upload error:', error);
+      alert('Failed to upload image. Please try again.');
     } finally {
       setUploading(false)
     }

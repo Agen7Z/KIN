@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import { Package, Users, ShoppingCart, Plus, Trash2, Eye, Edit3, Home, DollarSign, TrendingUp, Star, Menu, X } from 'lucide-react'
-import { useAuth } from '../context/AuthContext.jsx'
+import { useAuth } from '../hooks/useAuth'
 import ImageUpload from '../components/Admin/ImageUpload.jsx'
-import { useToast } from '../context/ToastContext.jsx'
+import { useToast } from '../hooks/useToast'
 
 const AdminDashboard = () => {
   const { user, logout } = useAuth()
@@ -21,7 +21,6 @@ const AdminDashboard = () => {
   const ensureArray = (value) => {
     if (Array.isArray(value)) return value
     if (value === null || value === undefined) return []
-    console.warn('State value is not an array, converting to empty array:', value)
     return []
   }
   
@@ -38,38 +37,14 @@ const AdminDashboard = () => {
     countInStock: 0
   })
 
-  // Fetch data from backend
-  useEffect(() => {
-    if (user?.role === 'admin') {
-      fetchData()
-    }
-  }, [user])
-
-  // Debug state changes
-  useEffect(() => {
-    console.log('Products state changed:', products)
-    console.log('Products type:', typeof products)
-    console.log('Products is array:', Array.isArray(products))
-  }, [products])
-
-  useEffect(() => {
-    console.log('Orders state changed:', orders)
-    console.log('Orders type:', typeof orders)
-    console.log('Orders is array:', Array.isArray(orders))
-  }, [orders])
-
-  useEffect(() => {
-    console.log('Users state changed:', users)
-    console.log('Users type:', typeof users)
-    console.log('Users is array:', Array.isArray(users))
-  }, [users])
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true)
       const token = localStorage.getItem('kin_auth') ? JSON.parse(localStorage.getItem('kin_auth')).token : null
       
-      if (!token) return
+      if (!token) {
+        return
+      }
 
       const headers = { 
         'Authorization': `Bearer ${token}`,
@@ -85,44 +60,41 @@ const AdminDashboard = () => {
 
       if (usersRes.ok) {
         const usersData = await usersRes.json()
-        console.log('Users response:', usersData)
         setUsers(ensureArray(usersData.data?.users || usersData.data))
       }
 
       if (ordersRes.ok) {
         const ordersData = await ordersRes.json()
-        console.log('Orders response:', ordersData)
         setOrders(ensureArray(ordersData.data?.orders || ordersData.data))
       }
 
       if (productsRes.ok) {
         const productsData = await productsRes.json()
-        console.log('Products response:', productsData)
         setProducts(ensureArray(productsData.data?.products || productsData.data))
       }
     } catch (error) {
-      console.error('Error fetching data:', error)
-      // Set empty arrays on error to prevent crashes
-      setUsers(ensureArray([]))
-      setOrders(ensureArray([]))
-      setProducts(ensureArray([]))
+      // Handle error silently
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-     // Calculate stats - moved inside render functions to avoid execution during component definition
-
-       // Debug function to check product data
-    const debugProduct = (product) => {
-      if (!product) {
-        console.log('No product provided to debug')
-        return
-      }
-      console.log('Product data:', product)
-      console.log('Product keys:', Object.keys(product))
-      console.log('Product values:', Object.values(product))
+  // Fetch data from backend
+  useEffect(() => {
+    if (user?.role === 'admin') {
+      fetchData()
     }
+  }, [user, fetchData])
+
+
+
+
+
+
+
+  // Calculate stats - moved inside render functions to avoid execution during component definition
+
+
 
     const submitProduct = async () => {
     // Validate required fields
@@ -144,23 +116,14 @@ const AdminDashboard = () => {
     try {
       setSubmitting(true)
       
-      // Debug token
-      console.log('Local storage:', localStorage.getItem('kin_auth'))
-      
       const token = localStorage.getItem('kin_auth') ? JSON.parse(localStorage.getItem('kin_auth')).token : null
-      console.log('Extracted token:', token)
       
       if (!token) {
         show('Authentication token not found. Please login again.', { type: 'error' })
         return
       }
 
-             console.log('Sending request with token:', token ? 'Yes' : 'No');
-       console.log('Request body:', {
-         ...form,
-         price: Number(form.price),
-         countInStock: Number(form.countInStock)
-       });
+
        
        const response = await fetch('/api/products', {
          method: 'POST',
@@ -175,12 +138,10 @@ const AdminDashboard = () => {
          })
        })
        
-       console.log('Response status:', response.status);
-       console.log('Response headers:', response.headers);
+
 
              if (response.ok) {
          const newProduct = await response.json()
-         console.log('Product created successfully:', newProduct)
          
                    // Update products list - replace if editing, add if new
           if (form.name && safeProducts.find(p => p.slug === form.slug)) {
@@ -208,11 +169,9 @@ const AdminDashboard = () => {
          setActiveSection('products')
        } else {
          const errorData = await response.json()
-         console.error('Backend error:', errorData)
          show(`Failed to ${form.name ? 'update' : 'add'} product: ${errorData.message || 'Unknown error'}`, { type: 'error' })
        }
     } catch (error) {
-      console.error('Error adding product:', error)
       show('Failed to add product. Please try again.', { type: 'error' })
     } finally {
       setSubmitting(false)
@@ -240,7 +199,6 @@ const AdminDashboard = () => {
          show('Failed to delete product', { type: 'error' })
        }
     } catch (error) {
-      console.error('Error deleting product:', error)
       show('Failed to delete product. Please try again.', { type: 'error' })
     }
   }
@@ -266,18 +224,12 @@ const AdminDashboard = () => {
          show('Failed to delete user', { type: 'error' })
        }
     } catch (error) {
-      console.error('Error deleting user:', error)
       show('Failed to delete user. Please try again.', { type: 'error' })
     }
   }
 
            const handleImagesChange = (newImages) => {
       setForm(prev => ({ ...prev, images: ensureArray(newImages) }))
-    }
-
-       const viewProduct = (product) => {
-      if (!product) return
-      alert(`Product Details:\n\nName: ${product.name || 'N/A'}\nSlug: ${product.slug || 'N/A'}\nPrice: Rs. ${product.price || 'N/A'}\nCategory: ${product.category || 'N/A'}\nGender: ${product.gender || 'N/A'}\nBrand: ${product.brand || 'N/A'}\nStock: ${product.countInStock || 'N/A'}\nDescription: ${product.description || 'No description'}`)
     }
 
        const editProduct = (product) => {
@@ -317,15 +269,9 @@ const AdminDashboard = () => {
          show('Failed to update order', { type: 'error' })
        }
     } catch (error) {
-      console.error('Error updating order:', error)
       show('Failed to update order status. Please try again.', { type: 'error' })
     }
   }
-
-  // Ensure state is always arrays before rendering
-  const safeUsers = ensureArray(users)
-  const safeOrders = ensureArray(orders)
-  const safeProducts = ensureArray(products)
 
   // Access control
   if (!user || user.role !== 'admin') {
@@ -355,6 +301,11 @@ const AdminDashboard = () => {
     { id: 'users', label: 'Manage Users', icon: Users },
     { id: 'orders', label: 'Orders', icon: ShoppingCart }
   ]
+
+  // Ensure state is always arrays before rendering
+  const safeUsers = ensureArray(users)
+  const safeOrders = ensureArray(orders)
+  const safeProducts = ensureArray(products)
 
   const renderOverview = () => (
     <div className="space-y-6">
@@ -424,7 +375,7 @@ const AdminDashboard = () => {
                         <p className="text-sm text-gray-500">{order.user?.username || 'Unknown'}</p>
                       </div>
                                            <div className="text-right">
-                       <p className="font-medium text-gray-900">Rs. {order.totalPrice?.toFixed(2) || '0.00'}</p>
+                       <p className="font-medium text-gray-900">Rs. {order.total?.toFixed(2) || '0.00'}</p>
                        <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
                          order.status === 'shipped' ? 'bg-blue-100 text-blue-800' :
                          order.status === 'processing' ? 'bg-yellow-100 text-yellow-800' :
@@ -855,7 +806,7 @@ const AdminDashboard = () => {
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900">Order #{order._id.slice(-6)}</h3>
                   <p className="text-sm text-gray-500">Customer: {order.user?.username || 'Unknown'} • Date: {new Date(order.createdAt).toLocaleDateString()}</p>
-                                     <p className="text-lg font-medium text-green-600 mt-1">Rs. {order.totalPrice?.toFixed(2) || '0.00'}</p>
+                                     <p className="text-lg font-medium text-green-600 mt-1">Rs. {order.total?.toFixed(2) || '0.00'}</p>
                 </div>
                 <span className={`px-4 py-2 rounded-full text-sm font-medium ${
                   order.status === 'delivered' ? 'bg-green-100 text-green-800' :

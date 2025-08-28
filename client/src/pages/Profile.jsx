@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import NavBar from '../components/Common/NavBar'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../hooks/useAuth'
 
 const Profile = () => {
   const { user, logout } = useAuth()
@@ -65,8 +65,9 @@ const Profile = () => {
                   {o.trackingNumber && (<p className="text-sm text-gray-600">Tracking: {o.trackingNumber}</p>)}
                 </div>
                 <div className="text-right">
-                  <p className="text-gray-900 font-semibold">${Number(o.total).toFixed(2)}</p>
+                  <p className="text-gray-900 font-semibold">Rs. {Number(o.total).toFixed(2)}</p>
                   <p className="text-sm text-gray-600">{new Date(o.createdAt).toLocaleString()}</p>
+                  <a href={`/orders/${o._id}`} className="inline-block mt-2 px-3 py-1 text-sm rounded bg-gray-900 text-white hover:bg-black">Track Order</a>
                 </div>
               </div>
               <div className="mt-3 divide-y divide-gray-100">

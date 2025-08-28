@@ -1,98 +1,147 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import React, { createContext, useState, useEffect } from 'react'
 
-const AuthContext = createContext(null)
-
-const STORAGE_KEY = 'kin_auth'
+const AuthContext = createContext()
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
-  const navigate = useNavigate()
 
   useEffect(() => {
-    const init = async () => {
+    const checkAuth = async () => {
       try {
-        const raw = localStorage.getItem(STORAGE_KEY)
-        if (!raw) return
-        const parsed = JSON.parse(raw)
-        if (!parsed?.token) return
-        const res = await fetch('/api/auth/me', {
-          headers: { Authorization: `Bearer ${parsed.token}` },
-        })
-        if (!res.ok) throw new Error('unauthorized')
-        const json = await res.json()
-        const next = { user: json?.data?.user, token: parsed.token }
-        setUser(next.user)
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
-      } catch {
-        localStorage.removeItem(STORAGE_KEY)
+        const tokenData = localStorage.getItem('kin_auth')
+        
+        if (tokenData) {
+          try {
+            const { token } = JSON.parse(tokenData)
+            
+            if (!token) {
+              localStorage.removeItem('kin_auth')
+              setUser(null)
+              setLoading(false)
+              return
+            }
+
+            const response = await fetch('/api/users/me', {
+              method: 'GET',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+              },
+              credentials: 'include'
+            })
+            
+            if (response.ok) {
+              const userData = await response.json()
+              setUser(userData.data.user)
+            } else if (response.status === 401) {
+              localStorage.removeItem('kin_auth')
+              setUser(null)
+            }
+          } catch (parseError) {
+            localStorage.removeItem('kin_auth')
+            setUser(null)
+          }
+        }
+      } catch (error) {
+        if (error.name === 'TypeError' && error.message.includes('fetch')) {
+          // Keep user logged in for network issues
+        } else {
+          localStorage.removeItem('kin_auth')
+          setUser(null)
+        }
       } finally {
         setLoading(false)
       }
     }
-    init()
+
+    checkAuth()
   }, [])
 
-  const login = useCallback(async (email, password) => {
-    const res = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-    })
-    if (!res.ok) throw new Error('Login failed')
-    const json = await res.json()
-    const token = json?.data?.token
-    const userData = json?.data?.user
-    if (!token || !userData) throw new Error('Invalid response')
-    setUser(userData)
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ user: userData, token }))
-    // Redirect based on user role
-    if (userData.role === 'admin') {
-      navigate('/admin')
-    } else {
-      navigate('/')
-    }
-    return userData
-  }, [navigate])
+  const login = async (email, password) => {
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ email, password }),
+        credentials: 'include'
+      })
 
-  const signup = useCallback(async (email, password, name) => {
-    const res = await fetch('/api/auth/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password, username: name }),
-    })
-    if (!res.ok) throw new Error('Signup failed')
-    const json = await res.json()
-    const token = json?.data?.token
-    const userData = json?.data?.user
-    if (!token || !userData) throw new Error('Invalid response')
-    setUser(userData)
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ user: userData, token }))
-    // Redirect based on user role
-    if (userData.role === 'admin') {
-      navigate('/admin')
-    } else {
-      navigate('/')
-    }
-    return userData
-  }, [navigate])
+      const data = await response.json()
 
-  const logout = useCallback(() => {
+      if (!response.ok) {
+        throw new Error(data.message || 'Login failed')
+      }
+
+      // Fix: Access token from the correct path in response
+      const token = data.data.token
+      if (!token) {
+        throw new Error('No token received from server')
+      }
+
+      localStorage.setItem('kin_auth', JSON.stringify({ token }))
+      setUser(data.data.user)
+      return { success: true }
+    } catch (error) {
+      return { success: false, error: error.message }
+    }
+  }
+
+  const signup = async (email, password, name) => {
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ username: name, email, password })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Signup failed')
+      }
+
+      // Fix: Access token from the correct path in response
+      const token = data.data.token
+      if (!token) {
+        throw new Error('No token received from server')
+      }
+
+      localStorage.setItem('kin_auth', JSON.stringify({ token }))
+      setUser(data.data.user)
+      return { success: true }
+    } catch (error) {
+      return { success: false, error: error.message }
+    }
+  }
+
+  const logout = () => {
+    localStorage.removeItem('kin_auth')
     setUser(null)
-    localStorage.removeItem(STORAGE_KEY)
-    navigate('/')
-  }, [navigate])
+  }
 
-  const value = useMemo(() => ({ user, loading, login, signup, logout }), [user, loading, login, signup, logout])
+  const value = {
+    user,
+    loading,
+    login,
+    signup,
+    logout
+  }
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
-export const useAuth = () => {
-  const ctx = useContext(AuthContext)
-  if (!ctx) throw new Error('useAuth must be used within an AuthProvider')
-  return ctx
-}
+export { AuthContext }
+export default AuthProvider
 
 
