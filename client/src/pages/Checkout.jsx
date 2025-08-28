@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import emailjs from '@emailjs/browser'
 import { useNavigate } from 'react-router-dom'
 import NavBar from '../components/Common/NavBar'
 import { useCart } from '../hooks/useCart'
@@ -126,9 +127,54 @@ const Checkout = () => {
       }
       
       const orderData = await res.json()
+      const order = orderData?.data?.order
       
       clearCart()
       show('Order placed successfully!', { type: 'success' })
+      // Fire-and-forget confirmation email from client if configured
+      try {
+        const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID1
+        const templateId = import.meta.env.VITE_EMAILJS_ORDER_TEMPLATE_ID1
+        const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY1
+        const toEmail = user?.email
+        if (serviceId && templateId && publicKey && toEmail && order) {
+          const firstItem = order?.items?.[0]
+          const totalUnits = Array.isArray(order?.items) ? order.items.reduce((s, i) => s + Number(i.quantity || 0), 0) : 0
+          emailjs.init(publicKey)
+          emailjs.send(serviceId, templateId, {
+            to_email: toEmail,
+            order_id: String(order._id || '').slice(-6),
+            name: firstItem?.name || 'Order Items',
+            units: totalUnits,
+            order_total: Number(order.total || 0).toFixed(2),
+            orders: (order.items || []).map(i => ({
+              name: i.name,
+              units: Number(i.quantity || 0),
+              price: Number(i.price || 0).toFixed(2)
+            })),
+            cost: {
+              shipping: Number(order.shipping || 0).toFixed(2),
+              total: Number(order.total || 0).toFixed(2)
+            }
+          }).then(() => {
+            // optional success log
+            console.log('Order email sent')
+          }).catch((err) => {
+            console.warn('Order email failed:', err?.text || err?.message || err)
+            show('Order placed, but email could not be sent.', { type: 'info' })
+          })
+        } else {
+          console.warn('Order email skipped due to missing config/data', {
+            hasServiceId: !!serviceId,
+            hasTemplateId: !!templateId,
+            hasPublicKey: !!publicKey,
+            hasEmail: !!toEmail,
+            hasOrder: !!order
+          })
+        }
+      } catch (err) {
+        console.warn('Order email exception:', err?.message || err)
+      }
       navigate('/profile')
     } catch (e) {
       show(e.message || 'Failed to place order', { type: 'error' })
