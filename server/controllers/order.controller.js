@@ -1,6 +1,7 @@
 import Order from "../models/order.model.js";
 import Product from "../models/product.model.js";
 import AppError from "../utils/appError.js";
+import sendEmail, { sendEmailViaEmailJS } from "../utils/email.js";
 
 // Add Khalti payment verification
 const verifyKhaltiPayment = async (token, amountPaisa) => {
@@ -92,6 +93,37 @@ export const createOrder = async (req, res, next) => {
             shippingAddress,
             paymentInfo,
         });
+
+        // Send confirmation email only after payment success
+        try {
+            const userEmail = req.user?.email;
+            const isPaid = order.paymentInfo?.provider === 'khalti' && (
+              order.paymentInfo?.verification?.idx || order.paymentInfo?.verification?.mocked
+            );
+            if (userEmail && isPaid) {
+                const firstItem = normalizedItems?.[0];
+                const totalUnits = normalizedItems.reduce((sum, i) => sum + Number(i.quantity || 0), 0);
+                await sendEmailViaEmailJS(process.env.EMAILJS_ORDER_TEMPLATE_ID || '', {
+                    to_email: userEmail,
+                    order_id: String(order._id).slice(-6),
+                    name: firstItem?.name || 'Order Items',
+                    units: totalUnits,
+                    order_total: Number(order.total || 0).toFixed(2),
+                    orders: normalizedItems.map(i => ({
+                        name: i.name,
+                        units: Number(i.quantity || 0),
+                        price: Number(i.price || 0).toFixed(2)
+                    })),
+                    cost: {
+                        shipping: Number(shipping || 0).toFixed(2),
+                        total: Number(order.total || 0).toFixed(2)
+                    }
+                });
+            }
+        } catch (e) {
+            // Non-blocking: log and continue
+            console.error('Order email failed:', e.message);
+        }
 
         res.status(201).json({ status: "success", data: { order } });
     } catch (error) {

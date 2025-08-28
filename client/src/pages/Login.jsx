@@ -18,6 +18,7 @@ const Login = () => {
     try {
       (window).google.accounts.id.initialize({
         client_id: clientId,
+        use_fedcm_for_prompt: true,
         callback: async (response) => {
           try {
             const payload = JSON.parse(atob(response.credential.split('.')[1] || ''))
