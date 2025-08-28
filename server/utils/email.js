@@ -1,6 +1,6 @@
-export const sendEmailViaEmailJS = async (templateId, templateParams = {}) => {
-  const serviceId = process.env.EMAILJS_SERVICE_ID;
-  const publicKey = process.env.EMAILJS_PUBLIC_KEY;
+export const sendEmailViaEmailJS = async (templateId, templateParams = {}, options = {}) => {
+  const serviceId = options.serviceId || process.env.EMAILJS_SERVICE_ID;
+  const publicKey = options.publicKey || process.env.EMAILJS_PUBLIC_KEY;
   if (!serviceId || !publicKey || !templateId) {
     // Silently skip sending if not configured
     return { skipped: true };

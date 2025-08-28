@@ -16,6 +16,20 @@ const Footer = () => {
     setLoading(true)
     setStatus('')
     try {
+      // Try server-side subscribe to avoid ad blockers
+      try {
+        const apiRes = await fetch('/api/users/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({ email })
+        })
+        if (apiRes.ok) {
+          setStatus('Subscribed!')
+          setEmail('')
+          return
+        }
+      } catch {}
+
       const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID
       const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID
       const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY

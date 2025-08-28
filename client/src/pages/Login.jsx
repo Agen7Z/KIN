@@ -13,7 +13,6 @@ const Login = () => {
 
   useEffect(() => {
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
-    console.log('GSI CID:', clientId, window.location.origin)
     if (!clientId || !(window).google) return
     try {
       (window).google.accounts.id.initialize({
@@ -44,11 +43,7 @@ const Login = () => {
         })
       }
       // Probe One Tap availability
-      ;(window).google.accounts.id.prompt((n) => {
-        const nd = n.getNotDisplayedReason?.()
-        const sk = n.getSkippedReason?.()
-        if (nd || sk) console.log('GSI prompt status:', { nd, sk })
-      })
+      ;(window).google.accounts.id.prompt(() => {})
     } catch {}
   }, [loginWithGoogle])
 

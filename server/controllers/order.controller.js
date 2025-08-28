@@ -46,12 +46,21 @@ export const createOrder = async (req, res, next) => {
                 product: p._id,
                 name: p.name,
                 price: p.price,
-                quantity: i.quantity,
+                quantity: Number(i.quantity || 0),
                 image: p.images?.[0] || "",
             };
         });
 
         const total = subtotal + Number(shipping || 0);
+
+        // Ensure stock availability before proceeding
+        for (const cartItem of items) {
+            const prod = productMap.get(String(cartItem.product));
+            if (!prod) return next(new AppError("Product not found in cart", 400));
+            if (typeof prod.countInStock === 'number' && prod.countInStock < Number(cartItem.quantity || 0)) {
+                return next(new AppError(`Insufficient stock for ${prod.name}`, 400));
+            }
+        }
 
         // Optional verification gate via env flag
         const shouldVerify = paymentInfo?.provider === 'khalti'
@@ -82,6 +91,21 @@ export const createOrder = async (req, res, next) => {
         } else if (paymentInfo?.provider === 'khalti') {
             // Mark as unverified (dev/mock) so admins can distinguish
             paymentInfo.verification = { mocked: true, note: 'Verification skipped (KHALTI_VERIFY=false or secret missing)' };
+        }
+
+        // Atomically decrement stock for all items
+        if (normalizedItems.length > 0) {
+            const ops = normalizedItems.map((it) => ({
+                updateOne: {
+                    filter: { _id: it.product, countInStock: { $gte: it.quantity } },
+                    update: { $inc: { countInStock: -Number(it.quantity) } }
+                }
+            }));
+            const result = await Product.bulkWrite(ops, { ordered: false });
+            const modified = (result.modifiedCount ?? result.nModified ?? 0);
+            if (modified < normalizedItems.length) {
+                return next(new AppError("Stock update failed due to concurrent change. Please try again.", 409));
+            }
         }
 
         const order = await Order.create({
@@ -118,6 +142,9 @@ export const createOrder = async (req, res, next) => {
                         shipping: Number(shipping || 0).toFixed(2),
                         total: Number(order.total || 0).toFixed(2)
                     }
+                }, {
+                    serviceId: process.env.EMAILJS_ORDER_SERVICE_ID || process.env.EMAILJS_SERVICE_ID,
+                    publicKey: process.env.EMAILJS_ORDER_PUBLIC_KEY || process.env.EMAILJS_PUBLIC_KEY
                 });
             }
         } catch (e) {

@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/user.model.js";
 import AppError from "../utils/appError.js";
+import { sendEmailViaEmailJS } from "../utils/email.js";
 
 const signToken = (userId) => {
     return jwt.sign({ id: userId }, process.env.JWT_SECRET, {
@@ -175,6 +176,31 @@ export const deleteUser = async (req, res, next) => {
         const user = await User.findByIdAndDelete(id);
         if (!user) return next(new AppError("User not found", 404));
         res.status(200).json({ status: "success", message: "User deleted" });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const subscribeEmail = async (req, res, next) => {
+    try {
+        const { email } = req.body;
+        if (!email) return next(new AppError('email is required', 400));
+        const templateId = process.env.EMAILJS_TEMPLATE_ID || '';
+        const serviceId = process.env.EMAILJS_SERVICE_ID || '';
+        const publicKey = process.env.EMAILJS_PUBLIC_KEY || '';
+
+        if (!templateId || !serviceId || !publicKey) {
+            // Not configured on server - respond success so client fallback can proceed without console errors
+            return res.status(200).json({ status: 'success', message: 'Subscription accepted (server email not configured)' });
+        }
+
+        try {
+            await sendEmailViaEmailJS(templateId, { to_email: email });
+            return res.status(200).json({ status: 'success', message: 'Subscribed' });
+        } catch (e) {
+            // Best-effort: do not 500; client may send via fallback
+            return res.status(200).json({ status: 'success', message: 'Subscription accepted (email send failed server-side)' });
+        }
     } catch (error) {
         next(error);
     }

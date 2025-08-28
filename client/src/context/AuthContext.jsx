@@ -11,6 +11,20 @@ export const AuthProvider = ({ children }) => {
       if (!email) return
       const flagKey = `kin_welcome_sent:${email}`
       if (localStorage.getItem(flagKey)) return
+      // Try server-side first (less likely to be blocked)
+      try {
+        const apiRes = await fetch('/api/users/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({ email })
+        })
+        if (apiRes.ok) {
+          localStorage.setItem(flagKey, '1')
+          return
+        }
+      } catch {}
+
+      // Fallback to client EmailJS
       const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID
       const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID
       const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY
@@ -25,9 +39,7 @@ export const AuthProvider = ({ children }) => {
           template_params: { to_email: email }
         })
       })
-      if (res.ok) {
-        localStorage.setItem(flagKey, '1')
-      }
+      if (res.ok) localStorage.setItem(flagKey, '1')
     } catch {}
   }
 
