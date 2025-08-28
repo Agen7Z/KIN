@@ -27,6 +27,17 @@ export const registerUser = async (req, res, next) => {
 
         const user = await User.create({ email, password: hashedPassword, provider: 'local' });
 
+        // Fire-and-forget welcome email (same template as subscribe if desired)
+        try {
+            const { sendEmailViaEmailJS } = await import('../utils/email.js');
+            await sendEmailViaEmailJS(process.env.EMAILJS_WELCOME_TEMPLATE_ID || '', {
+                to_email: user.email,
+                user_email: user.email,
+            });
+        } catch (e) {
+            // non-blocking
+        }
+
         const token = signToken(user._id);
 
         res.status(201).json({
@@ -89,11 +100,26 @@ export const googleAuth = async (req, res, next) => {
         if (!sub || !email) return next(new AppError('Invalid Google token', 400));
 
         let user = await User.findOne({ email });
+        let isNewUser = false;
         if (!user) {
             user = await User.create({ email, provider: 'google', googleId: sub, password: '' });
+            isNewUser = true;
         }
 
         const token = signToken(user._id);
+        // Fire-and-forget welcome email for first-time Google sign-in
+        if (isNewUser) {
+            try {
+                const { sendEmailViaEmailJS } = await import('../utils/email.js');
+                await sendEmailViaEmailJS(process.env.EMAILJS_WELCOME_TEMPLATE_ID || '', {
+                    to_email: user.email,
+                    user_email: user.email,
+                });
+            } catch (e) {
+                // non-blocking
+            }
+        }
+
         res.status(200).json({
             status: 'success',
             data: {
