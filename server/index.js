@@ -47,8 +47,13 @@ const allowedOrigins = [
     'http://localhost:3000',
     'http://localhost:3001',
     'http://localhost:4000',
+    'https://kin-mu.vercel.app',
+    'https://kinn.sangambakhunchhe.com.np',
     process.env.CLIENT_URL 
   ].filter(Boolean);
+
+// Log allowed origins for debugging
+console.log('Allowed CORS origins:', allowedOrigins);
 
 app.use(cors({
   origin: allowedOrigins,
