@@ -56,11 +56,11 @@ const ProductCard = ({
       : null
 
   return (
-    <article className="group relative overflow-hidden rounded-3xl bg-white shadow-[0_20px_60px_-20px_rgba(0,0,0,0.35)] ring-1 ring-gray-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_30px_80px_-24px_rgba(0,0,0,0.45)]">
+    <article className="group relative overflow-hidden rounded-3xl bg-white shadow-[0_12px_40px_-16px_rgba(0,0,0,0.25)] ring-1 ring-gray-100 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_60px_-20px_rgba(0,0,0,0.35)]">
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute inset-0 bg-gradient-to-br from-white via-transparent to-white/40 opacity-60" />
       </div>
-      <Link to={`/product/${product?.slug || product?._id || product?.id || ''}`} state={{ product }} className="relative block aspect-[4/5] w-full overflow-hidden">
+      <Link to={`/product/${product?.slug || product?._id || product?.id || ''}`} state={{ product }} className="relative block aspect-[16/10] w-full overflow-hidden">
         {cardImage ? (
           <img
             src={cardImage}
@@ -76,7 +76,7 @@ const ProductCard = ({
               <span className="rounded-full bg-black/80 backdrop-blur px-3 py-1 text-[10px] font-semibold tracking-wide text-white uppercase">New</span>
             )}
             {isTrending && (
-              <span className="rounded-full bg-white/90 px-3 py-1 text-[10px] font-semibold tracking-wide text-gray-900 uppercase ring-1 ring-gray-200">Trending</span>
+              <span className="rounded-full bg-purple-600 px-3 py-1 text-[10px] font-semibold tracking-wide text-white uppercase">Trending</span>
             )}
           </div>
         )}
@@ -88,28 +88,7 @@ const ProductCard = ({
 
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/40 via-black/10 to-transparent" />
 
-        {/* Floating action pill on hover */}
-        <div className="absolute inset-x-0 bottom-3 mx-3 hidden items-center justify-center gap-3 sm:flex">
-          <div className="pointer-events-none w-full opacity-0 translate-y-2 transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0">
-            <div className="pointer-events-auto flex items-center justify-between rounded-full bg-white/90 p-2 shadow-xl ring-1 ring-black/5 backdrop-blur">
-              <button
-                type="button"
-                onClick={handleQuickView}
-                className="inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-white"
-              >
-                Quick view
-              </button>
-              <div className="h-6 w-px bg-gray-200" />
-              <button
-                type="button"
-                onClick={handleAddToCart}
-                className="inline-flex items-center justify-center rounded-full bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-black"
-              >
-                Add to cart
-              </button>
-            </div>
-          </div>
-        </div>
+        {/* Actions removed for simple card */}
       </Link>
 
       <div className="p-5">
@@ -153,22 +132,7 @@ const ProductCard = ({
           ) : null}
         </div>
 
-        <div className="mt-3 flex gap-2 sm:hidden">
-          <button
-            type="button"
-            onClick={handleAddToCart}
-            className="inline-flex flex-1 items-center justify-center rounded-full bg-gray-900 px-4 py-2 text-sm font-semibold text-white ring-1 ring-black/5 transition hover:bg-black"
-          >
-            Add to cart
-          </button>
-          <button
-            type="button"
-            onClick={handleQuickView}
-            className="inline-flex items-center justify-center rounded-full bg-white px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-gray-200 transition hover:bg-white/90"
-          >
-            View
-          </button>
-        </div>
+        {/* Mobile actions removed */}
       </div>
     </article>
   )

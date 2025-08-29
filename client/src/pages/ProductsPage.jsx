@@ -202,6 +202,19 @@ const ProductsPage = () => {
     else if (sortBy === 'Best Selling') arr.sort((a, b) => (b.reviews || 0) - (a.reviews || 0))
     return arr
   })()
+
+  // Ensure highest sold (top trending) product appears first
+  const topTrendingId = (trendingProducts && trendingProducts.length > 0) ? String(trendingProducts[0]._id) : null
+  const productsForDisplay = (() => {
+    const arr = [...sortedProducts]
+    if (!topTrendingId) return arr
+    const idx = arr.findIndex(p => String(p._id) === topTrendingId)
+    if (idx > 0) {
+      const [item] = arr.splice(idx, 1)
+      arr.unshift(item)
+    }
+    return arr
+  })()
   
   const openQuickView = (product) => {
     setQuickViewProduct(product)
@@ -520,11 +533,11 @@ const ProductsPage = () => {
             </div>
 
                          {/* Premium Products Grid */}
-             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-10 xl:gap-12 items-stretch">
-               {sortedProducts.map((product) => (
+             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch">
+               {productsForDisplay.map((product) => (
                  <ProductCard
                    key={product._id}
-                   product={product}
+                   product={{ ...product, isTrending: product.isTrending || (topTrendingId && String(product._id) === topTrendingId) }}
                    rating={product.rating}
                    reviews={product.reviews}
                    onQuickView={() => openQuickView(product)}
