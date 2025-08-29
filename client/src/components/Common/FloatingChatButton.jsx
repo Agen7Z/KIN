@@ -1,9 +1,14 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useAuth } from '../../hooks/useAuth'
 import { HiOutlineChatAlt2 } from 'react-icons/hi'
 
 const FloatingChatButton = () => {
   const [isHovered, setIsHovered] = useState(false)
+  const { user } = useAuth()
+
+  // Hide for admins
+  if (user && user.role === 'admin') return null
 
   return (
     <Link
