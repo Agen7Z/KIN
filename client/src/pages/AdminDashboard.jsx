@@ -1108,47 +1108,21 @@ const AdminDashboard = () => {
 
 
 
-            <form
-              onSubmit={(e) => {
-                e.preventDefault()
-                if (!activeChatUserId) return
-                const t = adminMsgText.trim()
-                if (!t) return
-                adminSendMessage(activeChatUserId, t)
-                setAdminMsgText('')
-              }}
-              className="p-4 border-t border-gray-200/50 bg-white/50 backdrop-blur-sm"
-            >
-              <div className="flex items-center gap-3">
-                <input
-                  value={adminMsgText}
-                  onChange={(e) => setAdminMsgText(e.target.value)}
-                  onFocus={() => activeChatUserId && setTyping(true, activeChatUserId)}
-                  onBlur={() => activeChatUserId && setTyping(false, activeChatUserId)}
-                  placeholder={activeChatUserId ? 'Type a message...' : 'Select a conversation'}
-                  disabled={!activeChatUserId}
-                  className="flex-1 border border-gray-300/50 rounded-xl px-4 py-3 text-sm bg-white/70 backdrop-blur-sm focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 placeholder-gray-400 disabled:bg-gray-100"
-                />
-                <button 
-                  disabled={!activeChatUserId} 
-                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Send
-                </button>
-              </div>
+
 
 
   const renderContent = () => {
-    switch (activeSection) {
-      case 'overview': return renderOverview()
-      case 'products': return renderProductList()
-      case 'add-product': return renderAddProduct()
-      case 'users': return renderUsers()
-      case 'orders': return renderOrders()
-      case 'notices': return renderNotices()
-      case 'messages': return renderMessages()
-      default: return renderOverview()
-    }
+    return (
+      <>
+        {activeSection === 'overview' && renderOverview()}
+        {activeSection === 'products' && renderProductList()}
+        {activeSection === 'add-product' && renderAddProduct()}
+        {activeSection === 'users' && renderUsers()}
+        {activeSection === 'orders' && renderOrders()}
+        {activeSection === 'notices' && renderNotices()}
+        {activeSection === 'messages' && renderMessages()}
+      </>
+    )
   }
 
   return (
