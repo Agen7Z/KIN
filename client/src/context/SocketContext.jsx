@@ -87,8 +87,9 @@ export const SocketProvider = ({ children }) => {
     socket.on('chat:typing', (payload) => {
       if (user?.role === 'admin') {
         // Payload from user: { from:'user', userId, isTyping }
+        // Payload from admin: { from:'admin', userId, isTyping }
         if (!payload?.userId) return
-        setTypingState((prev) => ({ ...prev, [payload.userId]: { from: 'user', isTyping: !!payload.isTyping } }))
+        setTypingState((prev) => ({ ...prev, [payload.userId]: { from: payload.from, isTyping: !!payload.isTyping } }))
       } else {
         // Payload from admin: { from:'admin', isTyping }
         const myId = user?._id || user?.id
@@ -107,7 +108,7 @@ export const SocketProvider = ({ children }) => {
     }
   }, [user])
 
-  const sendUserMessage = (text) => {
+  const sendUserMessage = useCallback((text) => {
     const socket = socketRef.current
     if (!socket || !user || !text?.trim()) return
     socket.emit('chat:user_message', { text })
@@ -120,17 +121,17 @@ export const SocketProvider = ({ children }) => {
       next[userId] = list
       return next
     })
-  }
+  }, [user])
 
-  const adminSendMessage = (toUserId, text) => {
+  const adminSendMessage = useCallback((toUserId, text) => {
     const socket = socketRef.current
     if (!socket || !text?.trim() || !toUserId) return
     console.log('Admin sending message:', { toUserId, text, socket: !!socket })
     socket.emit('chat:admin_message', { toUserId, text })
-  }
+  }, [])
 
   // Emit typing indicator
-  const setTyping = (isTyping, forUserId) => {
+  const setTyping = useCallback((isTyping, forUserId) => {
     const socket = socketRef.current
     if (!socket) return
     if (user?.role === 'admin') {
@@ -139,9 +140,9 @@ export const SocketProvider = ({ children }) => {
     } else {
       socket.emit('chat:typing', { isTyping: !!isTyping })
     }
-  }
+  }, [user?.role])
 
-  const fetchThread = (forUserId, cb, options = {}) => {
+  const fetchThread = useCallback((forUserId, cb, options = {}) => {
     const socket = socketRef.current
     if (!socket) return
     const payload = user?.role === 'admin' && forUserId ? { userId: forUserId } : {}
@@ -160,15 +161,15 @@ export const SocketProvider = ({ children }) => {
       }
       if (typeof cb === 'function') cb(thread)
     })
-  }
+  }, [user?.role])
 
-  const fetchRecent = (cb) => {
+  const fetchRecent = useCallback((cb) => {
     const socket = socketRef.current
     if (!socket) return
     socket.emit('chat:get_recent', (list) => {
       if (typeof cb === 'function') cb(Array.isArray(list) ? list : [])
     })
-  }
+  }, [])
 
   const value = useMemo(() => ({
     socket: socketRef.current,

@@ -355,6 +355,8 @@ io.on('connection', async (socket) => {
       const toUserId = String(payload?.toUserId || '')
       if (!toUserId) return
       io.to(`user:${toUserId}`).emit('chat:typing', { from: 'admin', isTyping })
+      // Also echo back to all admins to show typing indicator in admin UI
+      adminSocketIds.forEach((sid) => io.to(sid).emit('chat:typing', { from: 'admin', userId: toUserId, isTyping }))
     } else {
       // User typing, broadcast to admins
       adminSocketIds.forEach((sid) => io.to(sid).emit('chat:typing', { from: 'user', userId: socket.data.userId, isTyping }))
