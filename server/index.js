@@ -219,7 +219,12 @@ io.on('connection', (socket) => {
     socket.data.role = authedUser.role || 'user';
     socket.join(`user:${authedUser.id}`);
     addUserSocket(authedUser.id, socket.id);
-    if (socket.data.role === 'admin') adminSocketIds.add(socket.id);
+    if (socket.data.role === 'admin') {
+      adminSocketIds.add(socket.id);
+      console.log('Admin connected:', { userId: authedUser.id, socketId: socket.id, adminSocketIds: Array.from(adminSocketIds) });
+    } else {
+      console.log('User connected:', { userId: authedUser.id, role: socket.data.role, socketId: socket.id });
+    }
   }
 
   // User/Admin requests conversation. Admin can specify { userId }. Supports pagination: { limit=20, beforeTs }
@@ -283,10 +288,18 @@ io.on('connection', (socket) => {
     if (!socket.data.userId || !payload?.text) return;
     const msg = { from: 'user', text: String(payload.text).slice(0, 1000), ts: Date.now() };
     pushMessage(socket.data.userId, msg);
-    try { await Message.create({ userId: socket.data.userId, from: 'user', text: msg.text }) } catch {}
+    try { 
+      const savedMsg = await Message.create({ userId: socket.data.userId, from: 'user', text: msg.text });
+      console.log('User message saved:', { userId: socket.data.userId, text: msg.text, msgId: savedMsg._id });
+    } catch (error) {
+      console.error('Failed to save user message:', error);
+    }
     // notify all admins
-    adminSocketIds.forEach((sid) => io.to(sid).emit('chat:message', { userId: socket.data.userId, ...msg }));
-    adminSocketIds.forEach((sid) => io.to(sid).emit('chat:notification', { userId: socket.data.userId, text: msg.text }));
+    console.log('Broadcasting user message to admins. Admin socket IDs:', Array.from(adminSocketIds));
+    adminSocketIds.forEach((sid) => {
+      io.to(sid).emit('chat:message', { userId: socket.data.userId, ...msg });
+      io.to(sid).emit('chat:notification', { userId: socket.data.userId, text: msg.text });
+    });
   });
 
   // Admin sends message to a specific user
@@ -295,16 +308,25 @@ io.on('connection', (socket) => {
     const toUserId = String(payload.toUserId);
     const msg = { from: 'admin', text: String(payload.text).slice(0, 1000), ts: Date.now() };
     pushMessage(toUserId, msg);
+    
+    console.log('Admin sending message:', { toUserId, text: msg.text, adminSocketIds: Array.from(adminSocketIds) });
+    
     try { 
       const savedMsg = await Message.create({ userId: toUserId, from: 'admin', text: msg.text });
-      console.log('Admin message saved:', { toUserId, text: msg.text, msgId: savedMsg._id });
+      console.log('Admin message saved to DB:', { toUserId, text: msg.text, msgId: savedMsg._id });
     } catch (error) {
-      console.error('Failed to save admin message:', error);
+      console.error('Failed to save admin message to DB:', error);
     }
+    
+    // Send to the specific user
     io.to(`user:${toUserId}`).emit('chat:message', { userId: toUserId, ...msg });
     io.to(`user:${toUserId}`).emit('chat:notification', { text: msg.text });
-    // Echo back to all admins to update their UI
-    adminSocketIds.forEach((sid) => io.to(sid).emit('chat:message', { userId: toUserId, ...msg }));
+    
+    // Echo back to ALL admins (including sender) to update their UI
+    adminSocketIds.forEach((sid) => {
+      console.log('Echoing admin message to admin socket:', sid);
+      io.to(sid).emit('chat:message', { userId: toUserId, ...msg });
+    });
   });
 
   // Typing indicators

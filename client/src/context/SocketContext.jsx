@@ -59,6 +59,7 @@ export const SocketProvider = ({ children }) => {
     // Chat: incoming message (both user/admin)
     socket.on('chat:message', (payload) => {
       if (!payload?.userId || !payload?.text) return
+      console.log('Received chat message:', payload)
       // Update chatThreads for the specific userId
       setChatThreads((prev) => {
         const next = { ...prev }
@@ -67,6 +68,9 @@ export const SocketProvider = ({ children }) => {
         const exists = list.some(m => m.text === payload.text && m.ts === payload.ts)
         if (!exists) {
           list.push({ from: payload.from, text: payload.text, ts: payload.ts })
+          console.log('Added message to thread:', { userId: payload.userId, from: payload.from, text: payload.text })
+        } else {
+          console.log('Message already exists, skipping duplicate')
         }
         next[payload.userId] = list
         return next
@@ -121,6 +125,7 @@ export const SocketProvider = ({ children }) => {
   const adminSendMessage = (toUserId, text) => {
     const socket = socketRef.current
     if (!socket || !text?.trim() || !toUserId) return
+    console.log('Admin sending message:', { toUserId, text, socket: !!socket })
     socket.emit('chat:admin_message', { toUserId, text })
   }
 
