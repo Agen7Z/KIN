@@ -113,6 +113,20 @@ const AdminDashboard = () => {
     setCurrentPage(1) // Reset to first page when search changes
   }, [products, searchTerm])
 
+  // Load recent chats when viewing Messages
+  useEffect(() => {
+    if (activeSection === 'messages') {
+      fetchRecent((list) => setRecentChats(list))
+    }
+  }, [activeSection, fetchRecent])
+
+  // Load selected user's thread when a user is chosen
+  useEffect(() => {
+    if (activeSection === 'messages' && activeChatUserId) {
+      fetchThread(activeChatUserId, undefined, { limit: 20 })
+    }
+  }, [activeSection, activeChatUserId, fetchThread])
+
   // Get current products for current page
   const indexOfLastProduct = currentPage * productsPerPage
   const indexOfFirstProduct = indexOfLastProduct - productsPerPage
@@ -1074,11 +1088,6 @@ const AdminDashboard = () => {
   )
 
   const renderMessages = () => {
-    useEffect(() => {
-      if (activeSection !== 'messages') return
-      fetchRecent((list) => setRecentChats(list))
-    }, [activeSection])
-
     const messages = activeChatUserId ? (chatThreads[activeChatUserId] || []) : []
 
     return (
@@ -1105,7 +1114,7 @@ const AdminDashboard = () => {
                 .map((c) => (
                 <button
                   key={c.userId}
-                  onClick={() => { setActiveChatUserId(c.userId) }}
+                  onClick={() => { setActiveChatUserId(c.userId); fetchThread(c.userId, undefined, { limit: 20 }) }}
                   className={`w-full text-left p-4 hover:bg-gray-50 ${activeChatUserId === c.userId ? 'bg-blue-50' : ''}`}
                 >
                   <div className="text-sm font-medium">{c.username || c.email || c.userId}</div>
