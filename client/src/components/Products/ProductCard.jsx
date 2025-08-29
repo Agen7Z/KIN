@@ -60,7 +60,7 @@ const ProductCard = ({
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute inset-0 bg-gradient-to-br from-white via-transparent to-white/40 opacity-60" />
       </div>
-      <Link to={`/product/${product?.slug || product?._id || product?.id || ''}`} state={{ product }} className="relative block aspect-[16/11] w-full overflow-hidden">
+      <Link to={`/product/${product?.slug || product?._id || product?.id || ''}`} state={{ product }} className="relative block aspect-[16/13] w-full overflow-hidden">
         {cardImage ? (
           <img
             src={cardImage}

@@ -57,169 +57,205 @@ const ProductDetail = () => {
   ].filter(d => d.value !== undefined && d.value !== null && d.value !== '')
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-b from-white via-gray-50 to-white">
-      {/* subtle ambient accents */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -top-20 -left-20 h-64 w-64 rounded-full bg-gradient-to-br from-gray-200 to-white blur-3xl opacity-60" />
-        <div className="absolute -bottom-24 -right-24 h-72 w-72 rounded-full bg-gradient-to-br from-gray-100 to-white blur-3xl opacity-70" />
-      </div>
-
+    <div className="min-h-screen bg-white">
       <NavBar />
 
-      <main className="relative z-10 max-w-6xl mx-auto px-6 pt-24 pb-20">
-        <div className="mb-6">
-          <button
-            onClick={() => navigate(-1)}
-            className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
-          >
-            <ChevronLeft className="h-4 w-4" /> Back
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          <div className="lg:sticky lg:top-0 lg:h-screen">
+      <main className="pt-20">
+        <div className="grid grid-cols-1 lg:grid-cols-2 min-h-screen">
+          {/* Left: Full-height Product Image */}
+          <div className="relative">
             <ProductMedia images={product.images} image={product.image} name={product.name} />
           </div>
 
-          <section className="lg:max-h-screen lg:overflow-y-auto lg:pr-4">
-            <p className="text-[10px] uppercase tracking-[0.2em] text-gray-500">{product.category}</p>
-            <h1 className="mt-2 text-3xl md:text-4xl font-semibold text-gray-900 tracking-tight">{product.name}</h1>
+          {/* Right: Product Details */}
+          <div className="px-8 py-12 lg:py-20 overflow-y-auto">
+            <div className="max-w-lg">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-gray-500">{product.category}</p>
+              <h1 className="mt-2 text-3xl md:text-4xl font-semibold text-gray-900 tracking-tight">{product.name}</h1>
 
-            {/* Price */}
-            <div className="mt-4 flex items-end gap-3">
-              <span className="text-2xl md:text-3xl font-bold text-gray-900">Rs. {Number(product.price).toFixed(2)}</span>
-              {typeof product.originalPrice === 'number' && (
-                <del className="text-sm md:text-base text-gray-400">Rs. {Number(product.originalPrice).toFixed(2)}</del>
-              )}
-            </div>
-
-            {/* Average Rating */}
-            {averageRating !== null && (
-              <div className="mt-3 flex items-center gap-2">
-                <StarRow value={Math.round(averageRating)} size="md" />
-                <span className="text-sm text-gray-600">{averageRating} / 5 · {(product.reviews || []).length} reviews</span>
-              </div>
-            )}
-
-            {/* Details Grid */}
-            {details.length > 0 && (
-              <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {details.map((d, idx) => (
-                  <div key={idx} className="flex items-center justify-between rounded-xl border border-gray-100 bg-white/60 backdrop-blur px-4 py-2 shadow-sm">
-                    <span className="text-xs text-gray-500">{d.label}</span>
-                    <span className="text-sm font-medium text-gray-900 truncate max-w-[14rem] text-right">{String(d.value)}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Description */}
-            {product.description && (
-              <div className="mt-6">
-                <h3 className="text-xs font-semibold text-gray-900 mb-2 uppercase tracking-wider">Description</h3>
-                <p className="text-sm leading-7 text-gray-700 whitespace-pre-line">{product.description}</p>
-              </div>
-            )}
-
-            {/* Actions */}
-            <div className="mt-8 flex gap-4">
-              {!isAdmin && (
-                <button
-                  onClick={() => addItem(product, 1)}
-                  className="flex-1 rounded-2xl bg-gray-900 px-6 py-3 text-sm font-medium tracking-wide text-white hover:bg-black transition"
-                >
-                  Add to Cart
-                </button>
-              )}
-              <button
-                onClick={() => navigate(-1)}
-                className="rounded-2xl border border-gray-300 px-6 py-3 text-sm font-medium text-gray-800 hover:bg-white/60 hover:backdrop-blur transition"
-              >
-                Back
-              </button>
-            </div>
-
-            {/* Admin */}
-            {isAdmin && (
-              <div className="mt-8 p-5 border border-gray-200 rounded-2xl bg-white/70 backdrop-blur">
-                <h3 className="text-sm font-semibold text-gray-900 mb-3">Admin Tools</h3>
-                <div className="text-sm text-gray-700 space-y-1">
-                  <p><strong>ID:</strong> {product._id || 'N/A'}</p>
-                  <p><strong>Slug:</strong> {product.slug}</p>
-                  <p><strong>Stock:</strong> {product.countInStock}</p>
-                  <p><strong>Status:</strong> {product.isActive ? 'Active' : 'Inactive'}</p>
-                </div>
-              </div>
-            )}
-
-            {/* Reviews */}
-            <section className="mt-12">
-              <div className="flex items-center gap-2">
-                <h3 className="text-lg font-semibold text-gray-900">Reviews</h3>
-                <Sparkles className="h-4 w-4 text-gray-400" />
-              </div>
-
-              <div className="mt-4 space-y-4">
-                {(product.reviews || []).length === 0 && (
-                  <p className="text-sm text-gray-600">No reviews yet.</p>
+              {/* Price */}
+              <div className="mt-4 flex items-end gap-3">
+                <span className="text-2xl md:text-3xl font-bold text-gray-900">Rs. {Number(product.price).toFixed(2)}</span>
+                {typeof product.originalPrice === 'number' && (
+                  <del className="text-sm md:text-base text-gray-400">Rs. {Number(product.originalPrice).toFixed(2)}</del>
                 )}
-                {(product.reviews || []).map((r, idx) => (
-                  <div
-                    key={idx}
-                    className="border border-gray-100 p-4 rounded-2xl bg-white/60 backdrop-blur shadow-sm"
-                  >
-                    <StarRow value={Number(r.rating) || 0} size="sm" />
-                    {r.comment && (
-                      <div className="text-sm text-gray-700 mt-2">{r.comment}</div>
-                    )}
-                    <div className="text-xs text-gray-500 mt-1">{new Date(r.createdAt || Date.now()).toLocaleDateString()}</div>
-                  </div>
-                ))}
               </div>
 
-              {user && user.role !== 'admin' && (
-                <ReviewForm
-                  slug={product.slug}
-                  onSubmitted={async () => {
-                    try {
-                      console.log('Refreshing product data after review submission...');
-                      const res = await apiFetch(`/api/products/${product.slug}`)
-                      if (!res.ok) {
-                        throw new Error(`Failed to refresh product: ${res.status}`);
-                      }
-                      const json = await res.json()
-                      console.log('Updated product data:', json?.data?.product);
-                      setProduct(json?.data?.product || product)
-                      show('Review added successfully!', { type: 'success' })
-                    } catch (error) {
-                      console.error('Failed to refresh product data:', error)
-                      // Still show success message even if refresh fails
-                      show('Review added successfully!', { type: 'success' })
-                    }
-                  }}
-                />
+              {/* Average Rating */}
+              {averageRating !== null && (
+                <div className="mt-3 flex items-center gap-2">
+                  <StarRow value={Math.round(averageRating)} size="md" />
+                  <span className="text-sm text-gray-600">{averageRating} / 5 · {(product.reviews || []).length} reviews</span>
+                </div>
               )}
-            </section>
-          </section>
+
+              {/* Details Grid */}
+              {details.length > 0 && (
+                <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {details.map((d, idx) => (
+                    <div key={idx} className="flex items-center justify-between rounded-xl border border-gray-100 bg-white/60 backdrop-blur px-4 py-2 shadow-sm">
+                      <span className="text-xs text-gray-500">{d.label}</span>
+                      <span className="text-sm font-medium text-gray-900 truncate max-w-[14rem] text-right">{String(d.value)}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Description */}
+              {product.description && (
+                <div className="mt-6">
+                  <h3 className="text-xs font-semibold text-gray-900 mb-2 uppercase tracking-wider">Description</h3>
+                  <p className="text-sm leading-7 text-gray-700 whitespace-pre-line">{product.description}</p>
+                </div>
+              )}
+
+              {/* Actions */}
+              <div className="mt-8 flex gap-4">
+                {!isAdmin && (
+                  <button
+                    onClick={() => addItem(product, 1)}
+                    className="flex-1 rounded-2xl bg-gray-900 px-6 py-3 text-sm font-medium tracking-wide text-white hover:bg-black transition"
+                  >
+                    Add to Cart
+                  </button>
+                )}
+                <button
+                  onClick={() => navigate(-1)}
+                  className="rounded-2xl border border-gray-300 px-6 py-3 text-sm font-medium text-gray-800 hover:bg-white/60 hover:backdrop-blur transition"
+                >
+                  Back
+                </button>
+              </div>
+
+              {/* Admin */}
+              {isAdmin && (
+                <div className="mt-8 p-5 border border-gray-200 rounded-2xl bg-white/70 backdrop-blur">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-3">Admin Tools</h3>
+                  <div className="text-sm text-gray-700 space-y-1">
+                    <p><strong>ID:</strong> {product._id || 'N/A'}</p>
+                    <p><strong>Slug:</strong> {product.slug}</p>
+                    <p><strong>Stock:</strong> {product.countInStock}</p>
+                    <p><strong>Status:</strong> {product.isActive ? 'Active' : 'Inactive'}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Reviews */}
+              <section className="mt-12">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-lg font-semibold text-gray-900">Reviews</h3>
+                  <Sparkles className="h-4 w-4 text-gray-400" />
+                </div>
+
+                <div className="mt-4 space-y-4">
+                  {(product.reviews || []).length === 0 && (
+                    <p className="text-sm text-gray-600">No reviews yet.</p>
+                  )}
+                  {(product.reviews || []).map((r, idx) => (
+                    <div
+                      key={idx}
+                      className="border border-gray-100 p-4 rounded-2xl bg-white/60 backdrop-blur shadow-sm"
+                    >
+                      <StarRow value={Number(r.rating) || 0} size="sm" />
+                      {r.comment && (
+                        <div className="text-sm text-gray-700 mt-2">{r.comment}</div>
+                      )}
+                      <div className="text-xs text-gray-500 mt-1">{new Date(r.createdAt || Date.now()).toLocaleDateString()}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {user && user.role !== 'admin' && (
+                  <ReviewForm
+                    slug={product.slug}
+                    onSubmitted={async () => {
+                      try {
+                        console.log('Refreshing product data after review submission...');
+                        const res = await apiFetch(`/api/products/${product.slug}`)
+                        if (!res.ok) {
+                          throw new Error(`Failed to refresh product: ${res.status}`);
+                        }
+                        const json = await res.json()
+                        console.log('Updated product data:', json?.data?.product);
+                        setProduct(json?.data?.product || product)
+                        show('Review added successfully!', { type: 'success' })
+                      } catch (error) {
+                        console.error('Failed to refresh product data:', error)
+                        // Still show success message even if refresh fails
+                        show('Review added successfully!', { type: 'success' })
+                      }
+                    }}
+                  />
+                )}
+              </section>
+            </div>
+          </div>
         </div>
       </main>
     </div>
   )
 }
 
-/** Product media: full-height, unscrollable image on large screens **/
+/** Product media: hero-style full-height image with carousel **/
 const ProductMedia = ({ images, image, name }) => {
-  const src = (images && images.length > 0 ? images[0] : image)
-  if (!src) return null
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const allImages = useMemo(() => {
+    const imgArray = []
+    if (images && images.length > 0) {
+      imgArray.push(...images)
+    }
+    if (image && !images?.includes(image)) {
+      imgArray.push(image)
+    }
+    return imgArray.length > 0 ? imgArray : [image]
+  }, [images, image])
+
+  const nextImage = () => {
+    setCurrentImageIndex((prev) => (prev + 1) % allImages.length)
+  }
+
+  const prevImage = () => {
+    setCurrentImageIndex((prev) => (prev - 1 + allImages.length) % allImages.length)
+  }
+
+  if (allImages.length === 0) return null
 
   return (
-    <section className="relative">
-      <div className="relative overflow-hidden lg:h-full h-[70vh] bg-black">
+    <section className="relative h-full">
+      <div className="relative h-full w-full overflow-hidden">
         <img
-          src={src}
+          src={allImages[currentImageIndex]}
           alt={name}
-          className="w-full h-full object-cover select-none"
+          className="w-full h-full object-cover select-none transition-all duration-1000 ease-in-out"
         />
+        
+        {/* Navigation buttons - only show if more than one image */}
+        {allImages.length > 1 && (
+          <>
+            <button
+              onClick={prevImage}
+              className="absolute left-6 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/90 hover:bg-white rounded-full shadow-lg flex items-center justify-center transition-all duration-200 hover:scale-110"
+            >
+              <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            
+            <button
+              onClick={nextImage}
+              className="absolute right-6 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/90 hover:bg-white rounded-full shadow-lg flex items-center justify-center transition-all duration-200 hover:scale-110"
+            >
+              <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 9l6 6 6-6" />
+              </svg>
+            </button>
+            
+            {/* Image counter */}
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-black/60 text-white px-4 py-2 rounded-full text-sm font-medium">
+              {currentImageIndex + 1} / {allImages.length}
+            </div>
+          </>
+        )}
       </div>
     </section>
   )
