@@ -20,7 +20,7 @@ const Hero = () => {
           <span className="block text-white text-2xl sm:text-3xl font-bold uppercase tracking-widest group-hover:text-white transition-colors duration-300 drop-shadow-lg">
             Men
           </span>
-          <Link to="/men" className="mt-8 px-4 sm:px-6 py-2 bg-black text-white font-medium uppercase tracking-wide rounded-lg shadow hover:bg-white hover:text-black transition-all duration-300 hover:shadow-lg text-sm sm:text-base">
+          <Link to="/men" className="mt-12 px-4 sm:px-6 py-2 bg-black text-white font-medium uppercase tracking-wide rounded-lg shadow hover:bg-white hover:text-black transition-all duration-300 hover:shadow-lg text-sm sm:text-base">
             Try Wears
           </Link>
         </div>
@@ -41,7 +41,7 @@ const Hero = () => {
           <span className="block text-white text-2xl sm:text-3xl font-bold uppercase tracking-widest group-hover:text-white transition-colors duration-300 drop-shadow-lg">
             Women
           </span>
-          <Link to="/women" className="mt-8 px-4 sm:px-6 py-2 bg-red-500 text-white font-medium uppercase tracking-wide rounded-lg shadow hover:bg-white hover:text-black transition-all duration-300 hover:shadow-lg text-sm sm:text-base">
+          <Link to="/women" className="mt-12 px-4 sm:px-6 py-2 bg-red-500 text-white font-medium uppercase tracking-wide rounded-lg shadow hover:bg-white hover:text-black transition-all duration-300 hover:shadow-lg text-sm sm:text-base">
             Try Wears
           </Link>
         </div>
