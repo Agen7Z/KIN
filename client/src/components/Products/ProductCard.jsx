@@ -56,78 +56,86 @@ const ProductCard = ({
       : null
 
   return (
-    <article className="group relative overflow-hidden rounded-2xl border border-white/20 bg-white/70 backdrop-blur-md shadow-[0_10px_30px_-10px_rgba(0,0,0,0.25)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.35)]">
-      <div className="absolute inset-0 rounded-2xl p-[1px] bg-gradient-to-br from-white/60 via-white/20 to-transparent pointer-events-none" />
-      <Link to={`/product/${product?.slug || product?._id || product?.id || ''}`} state={{ product }} className="relative block aspect-[4/3] w-full overflow-hidden bg-gray-50">
+    <article className="group relative overflow-hidden rounded-3xl bg-white shadow-[0_20px_60px_-20px_rgba(0,0,0,0.35)] ring-1 ring-gray-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_30px_80px_-24px_rgba(0,0,0,0.45)]">
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute inset-0 bg-gradient-to-br from-white via-transparent to-white/40 opacity-60" />
+      </div>
+      <Link to={`/product/${product?.slug || product?._id || product?.id || ''}`} state={{ product }} className="relative block aspect-[4/5] w-full overflow-hidden">
         {cardImage ? (
-            <img
-              src={cardImage}
-              alt={cardTitle}
-              className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-              loading="lazy"
-            />
+          <img
+            src={cardImage}
+            alt={cardTitle}
+            className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+            loading="lazy"
+          />
         ) : null}
 
         {(isNew || isTrending) && (
-          <div className="absolute left-3 top-3 flex gap-2">
+          <div className="absolute left-4 top-4 flex gap-2">
             {isNew && (
-              <span className="rounded-full bg-gray-900 px-2.5 py-1 text-xs font-medium text-white">New</span>
+              <span className="rounded-full bg-black/80 backdrop-blur px-3 py-1 text-[10px] font-semibold tracking-wide text-white uppercase">New</span>
             )}
             {isTrending && (
-              <span className="rounded-full bg-white/90 px-2.5 py-1 text-xs font-medium text-gray-900 ring-1 ring-gray-200">Trending</span>
+              <span className="rounded-full bg-white/90 px-3 py-1 text-[10px] font-semibold tracking-wide text-gray-900 uppercase ring-1 ring-gray-200">Trending</span>
             )}
           </div>
         )}
         {discount ? (
-          <div className="absolute right-3 top-3 rounded-full bg-emerald-500 px-2.5 py-1 text-xs font-bold text-white shadow">
+          <div className="absolute right-4 top-4 rounded-full bg-emerald-500/95 px-3 py-1 text-xs font-bold text-white shadow-lg">
             -{discount}%
           </div>
         ) : null}
 
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/25 to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/40 via-black/10 to-transparent" />
 
-        <div className="absolute inset-0 hidden items-end justify-center gap-3 p-4 sm:flex pointer-events-none">
-          <button
-            type="button"
-            onClick={handleQuickView}
-            className="pointer-events-auto inline-flex items-center justify-center rounded-full bg-white/90 px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-gray-200 transition hover:bg-white hover:shadow-md"
-          >
-            Quick view
-          </button>
-          <button
-            type="button"
-            onClick={handleAddToCart}
-            className="pointer-events-auto inline-flex items-center justify-center rounded-full bg-gray-900 px-4 py-2 text-sm font-semibold text-white shadow-sm ring-1 ring-black/5 transition hover:bg-black hover:shadow-md"
-          >
-            Add to cart
-          </button>
+        {/* Floating action pill on hover */}
+        <div className="absolute inset-x-0 bottom-3 mx-3 hidden items-center justify-center gap-3 sm:flex">
+          <div className="pointer-events-none w-full opacity-0 translate-y-2 transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0">
+            <div className="pointer-events-auto flex items-center justify-between rounded-full bg-white/90 p-2 shadow-xl ring-1 ring-black/5 backdrop-blur">
+              <button
+                type="button"
+                onClick={handleQuickView}
+                className="inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-white"
+              >
+                Quick view
+              </button>
+              <div className="h-6 w-px bg-gray-200" />
+              <button
+                type="button"
+                onClick={handleAddToCart}
+                className="inline-flex items-center justify-center rounded-full bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-black"
+              >
+                Add to cart
+              </button>
+            </div>
+          </div>
         </div>
       </Link>
 
-      <div className="space-y-2 p-4">
-        <div className="flex items-center gap-2">
+      <div className="p-5">
+        <div className="mb-1 flex items-center gap-2">
           {cardCategory ? (
-            <p className="text-xs uppercase tracking-wider text-gray-500">{cardCategory}</p>
+            <p className="text-[11px] uppercase tracking-[0.16em] text-gray-500">{cardCategory}</p>
           ) : null}
           {product?.gender && (
-            <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-              product.gender === 'men' ? 'bg-blue-100 text-blue-800' :
-              product.gender === 'women' ? 'bg-pink-100 text-pink-800' :
-              'bg-purple-100 text-purple-800'
-            }`}>
+            <span className={`${
+              product.gender === 'men' ? 'bg-blue-50 text-blue-700' :
+              product.gender === 'women' ? 'bg-pink-50 text-pink-700' :
+              'bg-purple-50 text-purple-700'
+            } rounded-full px-2 py-0.5 text-[10px] font-medium` }>
               {product.gender === 'unisex' ? 'Unisex' : 
                product.gender === 'men' ? 'Men' : 'Women'}
             </span>
           )}
         </div>
 
-        <h3 className="line-clamp-1 text-base font-semibold tracking-tight text-gray-900">
+        <h3 className="line-clamp-1 text-[15px] font-semibold tracking-tight text-gray-900">
           <Link to={`/product/${product?.slug || product?._id || product?.id || ''}`} state={{ product }} className="hover:underline">
             {cardTitle}
           </Link>
         </h3>
 
-        <div className="flex items-center gap-2">
+        <div className="mt-1 flex items-center gap-2">
           <div className="flex items-center">
             {Array.from({ length: 5 }).map((_, index) => (
               <StarIcon key={index} filled={index < Math.round(rating)} />
@@ -138,25 +146,25 @@ const ProductCard = ({
           ) : null}
         </div>
 
-        <div className="flex items-end gap-2">
+        <div className="mt-2 flex items-end gap-2">
           <span className="text-lg font-bold text-gray-900">{formattedPrice}</span>
           {formattedOriginal ? (
             <del className="text-sm font-medium text-gray-400">{formattedOriginal}</del>
           ) : null}
         </div>
 
-        <div className="mt-2 flex gap-2 sm:hidden">
+        <div className="mt-3 flex gap-2 sm:hidden">
           <button
             type="button"
             onClick={handleAddToCart}
-            className="inline-flex flex-1 items-center justify-center rounded-full bg-gray-900 px-4 py-2 text-sm font-semibold text-white shadow-sm ring-1 ring-black/5 transition hover:bg-black"
+            className="inline-flex flex-1 items-center justify-center rounded-full bg-gray-900 px-4 py-2 text-sm font-semibold text-white ring-1 ring-black/5 transition hover:bg-black"
           >
             Add to cart
           </button>
           <button
             type="button"
             onClick={handleQuickView}
-            className="inline-flex items-center justify-center rounded-full bg-white px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-gray-200 transition hover:bg-white/90"
+            className="inline-flex items-center justify-center rounded-full bg-white px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-gray-200 transition hover:bg-white/90"
           >
             View
           </button>
