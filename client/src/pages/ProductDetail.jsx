@@ -63,7 +63,7 @@ const ProductDetail = () => {
       <main className="pt-20">
         <div className="grid grid-cols-1 lg:grid-cols-2 min-h-screen">
           {/* Left: Full-height Product Image */}
-          <div className="relative">
+          <div className="relative lg:sticky lg:top-0 lg:h-screen lg:overflow-hidden">
             <ProductMedia images={product.images} image={product.image} name={product.name} />
           </div>
 
