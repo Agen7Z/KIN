@@ -59,62 +59,62 @@ const Chat = () => {
   )
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black overflow-hidden">
       <NavBar />
-      <div className="pt-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto">
+      <div className="pt-16 h-screen flex flex-col">
+        <div className="max-w-5xl mx-auto w-full h-full flex flex-col px-4 sm:px-6 lg:px-8">
           {/* Header */}
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+          <div className="text-center mb-6 flex-shrink-0">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-100 to-gray-300 bg-clip-text text-transparent">
               Chat with Admin
             </h1>
-            <p className="text-gray-600 mt-2">Get instant support and answers to your questions</p>
+            <p className="text-gray-400 mt-2">Get instant support and answers to your questions</p>
           </div>
           
           {/* Chat Container */}
-          <div className="bg-white/80 backdrop-blur-sm border border-white/20 rounded-2xl shadow-2xl shadow-blue-500/10 flex flex-col h-[75vh] overflow-hidden">
+          <div className="bg-gray-800/90 backdrop-blur-sm border border-gray-700/50 rounded-2xl shadow-2xl shadow-black/50 flex flex-col flex-1 overflow-hidden">
             {/* Chat Header */}
-            <div className="px-6 py-4 border-b border-gray-200/50 bg-gradient-to-r from-blue-50 to-indigo-50">
+            <div className="px-6 py-4 border-b border-gray-700/50 bg-gradient-to-r from-gray-700 to-gray-800 flex-shrink-0">
               <div className="flex items-center gap-3">
                 <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="font-semibold text-gray-800">Live Chat</span>
-                <span className="text-sm text-gray-500">• Admin is online</span>
+                <span className="font-semibold text-gray-100">Live Chat</span>
+                <span className="text-sm text-gray-400">• Admin is online</span>
               </div>
             </div>
             
             {/* Messages Area */}
             <div
               ref={listRef}
-              className="flex-1 overflow-y-auto p-6 space-y-4 bg-gradient-to-b from-white to-gray-50/30"
+              className="flex-1 overflow-y-auto p-6 space-y-4 bg-gradient-to-b from-gray-800 to-gray-900 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800"
               onScroll={() => { /* listener is set in effect */ }}
               onMouseEnter={() => setTyping(false)}
             >
               {loading && (
                 <div className="flex items-center justify-center py-8">
                   <div className="flex space-x-2">
-                    <div className="w-3 h-3 bg-blue-500 rounded-full animate-bounce"></div>
-                    <div className="w-3 h-3 bg-blue-500 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                    <div className="w-3 h-3 bg-blue-500 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                    <div className="w-3 h-3 bg-gray-400 rounded-full animate-bounce"></div>
+                    <div className="w-3 h-3 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                    <div className="w-3 h-3 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
                   </div>
                 </div>
               )}
               {messages.length === 0 && !loading && (
                 <div className="text-center py-12">
-                  <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center">
-                    <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-gray-700 to-gray-600 rounded-full flex items-center justify-center">
+                    <svg className="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                     </svg>
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-800 mb-2">Start a conversation</h3>
-                  <p className="text-gray-600">Say hello! The admin will reply here.</p>
+                  <h3 className="text-lg font-semibold text-gray-200 mb-2">Start a conversation</h3>
+                  <p className="text-gray-400">Say hello! The admin will reply here.</p>
                 </div>
               )}
               {messages.map((m, idx) => (
                 <div key={idx} className={`flex ${m.from === 'user' ? 'justify-end' : 'justify-start'} animate-fadeIn`}>
-                  <div className={`px-4 py-3 rounded-2xl text-sm max-w-[70%] shadow-sm transition-all duration-200 hover:shadow-md ${
+                  <div className={`px-4 py-3 rounded-2xl text-sm max-w-[70%] shadow-lg transition-all duration-200 hover:shadow-xl ${
                     m.from === 'user' 
-                      ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-br-md' 
-                      : 'bg-white border border-gray-200 text-gray-800 rounded-bl-md shadow-sm'
+                      ? 'bg-gradient-to-br from-gray-600 to-gray-700 text-gray-100 rounded-br-md border border-gray-600' 
+                      : 'bg-gray-700 border border-gray-600 text-gray-100 rounded-bl-md'
                   }`}>
                     {m.text}
                   </div>
@@ -124,7 +124,7 @@ const Chat = () => {
               {/* Typing Indicator */}
               {typingState[myUserId]?.from === 'admin' && typingState[myUserId]?.isTyping && (
                 <div className="flex justify-start animate-fadeIn">
-                  <div className="bg-white border border-gray-200 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
+                  <div className="bg-gray-700 border border-gray-600 rounded-2xl rounded-bl-md px-4 py-3 shadow-lg">
                     <div className="flex space-x-1">
                       <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
                       <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
@@ -136,7 +136,7 @@ const Chat = () => {
             </div>
             
             {/* Input Area */}
-            <div className="px-6 py-4 border-t border-gray-200/50 bg-white/50 backdrop-blur-sm">
+            <div className="px-6 py-4 border-t border-gray-700/50 bg-gray-800/80 backdrop-blur-sm flex-shrink-0">
               <form
                 onSubmit={(e) => {
                   e.preventDefault()
@@ -154,12 +154,12 @@ const Chat = () => {
                     onFocus={() => setTyping(true)}
                     onBlur={() => setTyping(false)}
                     placeholder="Type your message..."
-                    className="w-full border border-gray-300/50 rounded-xl px-4 py-3 text-sm bg-white/70 backdrop-blur-sm focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 placeholder-gray-400"
+                    className="w-full border border-gray-600/50 rounded-xl px-4 py-3 text-sm bg-gray-700/70 backdrop-blur-sm focus:bg-gray-700 focus:border-gray-500 focus:ring-2 focus:ring-gray-500/20 transition-all duration-200 placeholder-gray-400 text-gray-100"
                   />
                 </div>
                 <button 
                   type="submit"
-                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-500 hover:to-gray-600 text-gray-100 px-6 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed border border-gray-600"
                   disabled={!text.trim()}
                 >
                   Send

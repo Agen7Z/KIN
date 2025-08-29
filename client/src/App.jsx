@@ -22,6 +22,7 @@ import OrderDetail from './pages/OrderDetail'
 import OrdersList from './pages/OrdersList'
 import About from './pages/About'
 import Chat from './pages/Chat'
+import AdminChat from './pages/AdminChat'
 import FloatingChatButton from './components/Common/FloatingChatButton.jsx'
 
 // Protected Route Component
@@ -81,10 +82,10 @@ const App = () => {
             <Route path='/orders' element={<ProtectedRoute><OrdersList /></ProtectedRoute>} />
             <Route path='/about' element={<About />} />
             <Route path='/chat' element={<ProtectedRoute><Chat /></ProtectedRoute>} />
+            <Route path='/admin/chat' element={<ProtectedRoute requiredRole="admin"><AdminChat /></ProtectedRoute>} />
           </Routes>
           <CartDrawer />
           <FloatingChatButton />
-          <Footer />
           </SocketProvider>
           </ToastProvider>
         </CartProvider>

@@ -14,15 +14,15 @@ const FloatingChatButton = () => {
     >
       {/* Main button */}
       <div className="relative">
-        <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full shadow-lg hover:shadow-xl transform hover:scale-110 transition-all duration-300 ease-out flex items-center justify-center">
-          <HiOutlineChatAlt2 className="w-8 h-8 text-white" />
+        <div className="w-16 h-16 bg-gradient-to-br from-gray-700 to-gray-800 rounded-full shadow-lg hover:shadow-xl transform hover:scale-110 transition-all duration-300 ease-out flex items-center justify-center border border-gray-600">
+          <HiOutlineChatAlt2 className="w-8 h-8 text-gray-200" />
         </div>
         
         {/* Pulse animation */}
-        <div className="absolute inset-0 w-16 h-16 bg-blue-400 rounded-full animate-ping opacity-20"></div>
+        <div className="absolute inset-0 w-16 h-16 bg-gray-600 rounded-full animate-ping opacity-20"></div>
         
         {/* Hover glow effect */}
-        <div className={`absolute inset-0 w-16 h-16 bg-blue-300 rounded-full transition-all duration-300 ${
+        <div className={`absolute inset-0 w-16 h-16 bg-gray-500 rounded-full transition-all duration-300 ${
           isHovered ? 'scale-125 opacity-30' : 'scale-100 opacity-0'
         }`}></div>
       </div>

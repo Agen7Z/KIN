@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react'
+import { Link } from 'react-router-dom'
 import apiFetch from '../utils/api'
 import { Package, Users, ShoppingCart, Plus, Trash2, Eye, Edit3, Home, Menu, X, Megaphone, MessageSquare } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
@@ -383,7 +384,7 @@ const AdminDashboard = () => {
     { id: 'users', label: 'Manage Users', icon: Users },
     { id: 'orders', label: 'Orders', icon: ShoppingCart },
     { id: 'notices', label: 'Send Notice', icon: Megaphone },
-    { id: 'messages', label: 'Messages', icon: MessageSquare }
+    { id: 'messages', label: 'Messages', icon: MessageSquare, external: '/admin/chat' }
   ]
 
   // Ensure state is always arrays before rendering
@@ -1088,126 +1089,25 @@ const AdminDashboard = () => {
   )
 
   const renderMessages = () => {
-    const messages = activeChatUserId ? (chatThreads[activeChatUserId] || []) : []
-
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-gray-900">Messages</h1>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-gray-200/50 md:col-span-1 overflow-hidden">
-            <div className="p-4 border-b border-gray-200/50 bg-gradient-to-r from-blue-50 to-indigo-50 space-y-3">
-              <div className="font-medium text-gray-800">Users</div>
-              <input
-                value={userSearch}
-                onChange={(e)=>setUserSearch(e.target.value)}
-                placeholder="Search users..."
-                className="w-full border border-gray-300/50 rounded-xl px-3 py-2 text-sm bg-white/70 backdrop-blur-sm focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 placeholder-gray-400"
-              />
-            </div>
-            <div className="max-h-[480px] overflow-y-auto divide-y divide-gray-100">
-              {(() => {
-                // Merge all users with recent chat data so list is never empty
-                const recentMap = new Map(recentChats.map(rc => [rc.userId, rc]))
-                const merged = safeUsers.map(u => {
-                  const rc = recentMap.get(String(u._id))
-                  return {
-                    userId: String(u._id),
-                    username: u.username,
-                    email: u.email,
-                    lastText: rc?.lastText || '',
-                    lastFrom: rc?.lastFrom || '',
-                    ts: rc?.ts || 0,
-                  }
-                })
-                // Include any users who might not be in the safeUsers list but appear in recentChats
-                recentChats.forEach(rc => {
-                  if (!merged.find(m => m.userId === rc.userId)) {
-                    merged.push({ userId: rc.userId, username: rc.username, email: rc.email, lastText: rc.lastText, lastFrom: rc.lastFrom, ts: rc.ts })
-                  }
-                })
-                const filtered = merged.filter(m => {
-                  if (!userSearch) return true
-                  const q = userSearch.toLowerCase()
-                  return (
-                    (m.username || '').toLowerCase().includes(q) ||
-                    (m.email || '').toLowerCase().includes(q) ||
-                    (m.userId || '').toLowerCase().includes(q) ||
-                    (m.lastText || '').toLowerCase().includes(q)
-                  )
-                })
-                const sorted = filtered.sort((a,b) => (b.ts||0)-(a.ts||0))
-                if (sorted.length === 0) {
-                  return (<div className="p-4 text-sm text-gray-500">No users</div>)
-                }
-                return sorted.map((c) => (
-                  <button
-                    key={c.userId}
-                    onClick={() => { setActiveChatUserId(c.userId); fetchThread(c.userId, undefined, { limit: 20 }) }}
-                    className={`w-full text-left p-4 hover:bg-blue-50/50 transition-all duration-200 ${
-                      activeChatUserId === c.userId 
-                        ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-r-2 border-blue-500' 
-                        : 'hover:bg-gray-50/50'
-                    }`}
-                  >
-                    <div className="text-sm font-medium">{c.username || c.email || c.userId}</div>
-                    <div className="text-xs text-gray-500 truncate">{c.email}</div>
-                    {c.lastText && (
-                      <div className="text-xs text-gray-500 truncate">{c.lastFrom === 'admin' ? 'You: ' : ''}{c.lastText}</div>
-                    )}
-                  </button>
-                ))
-              })()}
-            </div>
-          </div>
-          <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-gray-200/50 md:col-span-2 flex flex-col overflow-hidden">
-            <div className="p-4 border-b border-gray-200/50 bg-gradient-to-r from-blue-50 to-indigo-50 flex items-center justify-between">
-              <span className="font-medium text-gray-800">{activeChatUserId ? `Chat with ${activeChatUserId}` : 'Select a conversation'}</span>
-              {activeChatUserId && (
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  <span className="text-xs text-gray-500">User online</span>
-                </div>
-              )}
-            </div>
-            <div className="flex-1 p-4 overflow-y-auto space-y-3 h-[480px] max-h-[480px] bg-gradient-to-b from-white to-gray-50/30">
-              {(!activeChatUserId || messages.length === 0) && (
-                <div className="text-center py-12">
-                  <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center">
-                    <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                    </svg>
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                    {!activeChatUserId ? 'Choose a user to start chatting' : 'No messages yet'}
-                  </h3>
-                  <p className="text-gray-600">
-                    {!activeChatUserId ? 'Select a user from the left to begin a conversation' : 'Start the conversation by sending a message'}
-                  </p>
-                </div>
-              )}
-              {messages.map((m, idx) => (
-                <div key={idx} className={`flex ${m.from === 'admin' ? 'justify-end' : 'justify-start'} animate-fadeIn`}>
-                  <div className={`px-4 py-3 rounded-2xl text-sm max-w-[70%] shadow-sm transition-all duration-200 hover:shadow-md ${
-                    m.from === 'admin' 
-                      ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-br-md' 
-                      : 'bg-white border border-gray-200 text-gray-800 rounded-bl-md'
-                  }`}>
-                    {m.text}
-                  </div>
-                </div>
-              ))}
-              {activeChatUserId && typingState[activeChatUserId]?.from === 'user' && typingState[activeChatUserId]?.isTyping && (
-                <div className="flex justify-start animate-fadeIn">
-                  <div className="bg-white border border-gray-200 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
-                    <div className="flex space-x-1">
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Messages</h1>
+          <p className="text-gray-600 mb-6">Access the dedicated chat interface for better user experience</p>
+          <Link
+            to="/admin/chat"
+            className="inline-flex items-center gap-2 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-500 hover:to-gray-600 text-white px-6 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+          >
+            <MessageSquare className="w-5 h-5" />
+            Open Chat Interface
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+
+
             <form
               onSubmit={(e) => {
                 e.preventDefault()
@@ -1236,12 +1136,7 @@ const AdminDashboard = () => {
                   Send
                 </button>
               </div>
-            </form>
-          </div>
-        </div>
-      </div>
-    )
-  }
+
 
   const renderContent = () => {
     switch (activeSection) {
@@ -1301,23 +1196,35 @@ const AdminDashboard = () => {
             <div className="space-y-2">
               {sidebarItems.map((item) => {
                 const Icon = item.icon
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => {
-                      setActiveSection(item.id)
-                      setSidebarOpen(false)
-                    }}
-                    className={`w-full flex items-center space-x-3 px-4 py-3 text-left rounded-lg transition-colors ${
-                      activeSection === item.id
-                        ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
-                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                    }`}
-                  >
-                    <Icon className="w-5 h-5" />
-                    <span className="font-medium">{item.label}</span>
-                  </button>
-                )
+                                 if (item.external) {
+                   return (
+                     <Link
+                       key={item.id}
+                       to={item.external}
+                       className="w-full flex items-center space-x-3 px-4 py-3 text-left rounded-lg transition-colors text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                     >
+                       <Icon className="w-5 h-5" />
+                       <span className="font-medium">{item.label}</span>
+                     </Link>
+                   )
+                 }
+                 return (
+                   <button
+                     key={item.id}
+                     onClick={() => {
+                       setActiveSection(item.id)
+                       setSidebarOpen(false)
+                     }}
+                     className={`w-full flex items-center space-x-3 px-4 py-3 text-left rounded-lg transition-colors ${
+                       activeSection === item.id
+                         ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
+                         : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                       }`}
+                   >
+                     <Icon className="w-5 h-5" />
+                     <span className="font-medium">{item.label}</span>
+                   </button>
+                 )
               })}
             </div>
           </nav>
