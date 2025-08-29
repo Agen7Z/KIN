@@ -77,7 +77,9 @@ const ProductDetail = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          <ProductMedia images={product.images} image={product.image} name={product.name} />
+          <div className="lg:sticky lg:top-0 lg:h-screen">
+            <ProductMedia images={product.images} image={product.image} name={product.name} />
+          </div>
 
           <section className="lg:max-h-screen lg:overflow-y-auto lg:pr-4">
             <p className="text-[10px] uppercase tracking-[0.2em] text-gray-500">{product.category}</p>
@@ -205,71 +207,19 @@ const ProductDetail = () => {
   )
 }
 
-/** Product media with image carousel **/
+/** Product media: full-height, unscrollable image on large screens **/
 const ProductMedia = ({ images, image, name }) => {
-  const [currentImageIndex, setCurrentImageIndex] = useState(0)
-  const allImages = useMemo(() => {
-    const imgArray = []
-    if (images && images.length > 0) {
-      imgArray.push(...images)
-    }
-    if (image && !images?.includes(image)) {
-      imgArray.push(image)
-    }
-    return imgArray.length > 0 ? imgArray : [image]
-  }, [images, image])
-
-  const nextImage = () => {
-    setCurrentImageIndex((prev) => (prev + 1) % allImages.length)
-  }
-
-  const prevImage = () => {
-    setCurrentImageIndex((prev) => (prev - 1 + allImages.length) % allImages.length)
-  }
-
-  if (allImages.length === 0) return null
+  const src = (images && images.length > 0 ? images[0] : image)
+  if (!src) return null
 
   return (
     <section className="relative">
-      <div className="relative overflow-hidden rounded-3xl shadow-lg bg-gradient-to-b from-gray-100 to-white aspect-square">
+      <div className="relative overflow-hidden lg:h-full h-[70vh] bg-black">
         <img
-          src={allImages[currentImageIndex]}
+          src={src}
           alt={name}
-          className="w-full h-full object-cover select-none transition-transform duration-1000 ease-in-out"
+          className="w-full h-full object-cover select-none"
         />
-        
-        {/* Navigation buttons - only show if more than one image */}
-        {allImages.length > 1 && (
-          <>
-            <button
-              onClick={prevImage}
-              className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 hover:bg-white rounded-full shadow-lg flex items-center justify-center transition-all duration-200 hover:scale-110"
-            >
-              <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            
-            <button
-              onClick={nextImage}
-              className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 hover:bg-white rounded-full shadow-lg flex items-center justify-center transition-all duration-200 hover:scale-110"
-            >
-              <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 9l6 6 6-6" />
-              </svg>
-            </button>
-            
-            {/* Image counter */}
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/60 text-white px-3 py-1 rounded-full text-sm font-medium">
-              {currentImageIndex + 1} / {allImages.length}
-            </div>
-          </>
-        )}
-        
-        {/* soft reflection */}
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-white/0 via-white/0 to-white/20" />
-        {/* bottom fade */}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/10 to-transparent" />
       </div>
     </section>
   )
