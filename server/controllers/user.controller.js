@@ -27,7 +27,25 @@ export const registerUser = async (req, res, next) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        const user = await User.create({ email, password: hashedPassword, provider: 'local' });
+        // Generate a unique username based on email local-part
+        const generateUsername = async (emailAddr) => {
+            const base = (emailAddr.split('@')[0] || 'user').replace(/[^a-zA-Z0-9._-]/g, '') || 'user'
+            let candidate = base
+            let counter = 1
+            // Ensure uniqueness
+            // eslint-disable-next-line no-constant-condition
+            while (true) {
+                const exists = await User.findOne({ username: candidate }).select('_id').lean()
+                if (!exists) break
+                candidate = `${base}${counter}`
+                counter += 1
+            }
+            return candidate
+        }
+
+        const username = await generateUsername(email)
+
+        const user = await User.create({ email, username, password: hashedPassword, provider: 'local' });
 
         // Fire-and-forget welcome email (same template as subscribe if desired)
         try {
