@@ -16,11 +16,11 @@ const Hero = () => {
         {/* Overlay for better text readability */}
         <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-all duration-300" />
         
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-center group-hover:text-white transition-colors duration-300 z-10">
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-center group-hover:text-white transition-colors duration-300 z-10">
           <span className="block text-white text-2xl sm:text-3xl font-bold uppercase tracking-widest group-hover:text-white transition-colors duration-300 drop-shadow-lg">
             Men
           </span>
-          <span className="mt-12 inline-block px-4 sm:px-6 py-2 bg-black text-white font-medium uppercase tracking-wide rounded-lg shadow group-hover:bg-white group-hover:text-black transition-all duration-300 text-sm sm:text-base">
+          <span className="mt-6 inline-block px-4 sm:px-5 py-2 bg-black text-white font-medium uppercase tracking-wide rounded-lg shadow group-hover:bg-white group-hover:text-black transition-all duration-300 text-sm sm:text-base">
             Explore Men
           </span>
         </div>
@@ -37,11 +37,11 @@ const Hero = () => {
         {/* Overlay for better text readability */}
         <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-all duration-300" />
         
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-center group-hover:text-white transition-colors duration-300 z-10">
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-center group-hover:text-white transition-colors duration-300 z-10">
           <span className="block text-white text-2xl sm:text-3xl font-bold uppercase tracking-widest group-hover:text-white transition-colors duration-300 drop-shadow-lg">
             Women
           </span>
-          <span className="mt-12 inline-block px-4 sm:px-6 py-2 bg-red-500 text-white font-medium uppercase tracking-wide rounded-lg shadow group-hover:bg-white group-hover:text-black transition-all duration-300 text-sm sm:text-base">
+          <span className="mt-6 inline-block px-4 sm:px-5 py-2 bg-red-500 text-white font-medium uppercase tracking-wide rounded-lg shadow group-hover:bg-white group-hover:text-black transition-all duration-300 text-sm sm:text-base">
             Explore Women
           </span>
         </div>
