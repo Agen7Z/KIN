@@ -11,6 +11,7 @@ export const SocketProvider = ({ children }) => {
   const socketRef = useRef(null)
   const [connected, setConnected] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
+  const [bannerNotice, setBannerNotice] = useState(null)
 
   const apiBase = (import.meta?.env?.VITE_API_URL) || 'http://localhost:4000'
 
@@ -41,6 +42,12 @@ export const SocketProvider = ({ children }) => {
       if (payload?.message) {
         show(payload.title ? `${payload.title}: ${payload.message}` : payload.message, { type: 'info' })
       }
+      // transient banner visible for 5s
+      setBannerNotice({
+        title: payload?.title || 'Notice',
+        message: payload?.message || ''
+      })
+      setTimeout(() => setBannerNotice(null), 5000)
     })
 
     return () => {
@@ -54,8 +61,9 @@ export const SocketProvider = ({ children }) => {
     socket: socketRef.current,
     connected,
     unreadCount,
-    clearUnread: () => setUnreadCount(0)
-  }), [connected, unreadCount])
+    clearUnread: () => setUnreadCount(0),
+    bannerNotice,
+  }), [connected, unreadCount, bannerNotice])
 
   return (
     <SocketContext.Provider value={value}>

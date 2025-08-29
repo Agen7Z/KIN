@@ -9,7 +9,7 @@ import { useSocket } from '../../context/SocketContext.jsx'
 const NavBar = () => {
   const { count, toggle } = useCart()
   const { user } = useAuth()
-  const { unreadCount, clearUnread } = useSocket() || {}
+  const { unreadCount, clearUnread, bannerNotice } = useSocket() || {}
   const [open, setOpen] = React.useState(false)
   const [loading, setLoading] = React.useState(false)
   const [notices, setNotices] = React.useState([])
@@ -88,25 +88,44 @@ const NavBar = () => {
         </div>
       </div>
       {open && user && user.role !== 'admin' && (
-        <div className="absolute right-4 sm:right-6 lg:right-8 top-14 sm:top-16 z-30 w-80 max-w-[90vw] bg-white border border-gray-200 rounded-lg shadow-lg">
-          <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200">
-            <span className="text-sm font-semibold text-gray-800">Recent notices</span>
-            <button onClick={() => setOpen(false)} className="text-gray-500 hover:text-gray-700 text-sm">Close</button>
+        <div className="absolute right-4 sm:right-6 lg:right-8 top-14 sm:top-16 z-30 w-80 max-w-[90vw] bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-2 bg-blue-600 text-white">
+            <span className="text-sm font-semibold">Recent notices</span>
+            <button onClick={() => setOpen(false)} className="opacity-90 hover:opacity-100 text-sm">Close</button>
           </div>
           <div className="max-h-80 overflow-auto">
             {loading ? (
-              <div className="p-4 text-sm text-gray-500">Loading…</div>
+              <div className="p-4 text-sm text-blue-700 bg-blue-50">Loading…</div>
             ) : (notices.length === 0 ? (
-              <div className="p-4 text-sm text-gray-500">No notices</div>
+              <div className="p-4 text-sm text-gray-600">No notices</div>
             ) : (
               notices.map(n => (
                 <div key={n._id} className="px-4 py-3 border-b last:border-b-0 border-gray-100">
-                  {n.title && <div className="text-sm font-medium text-gray-900">{n.title}</div>}
-                  <div className="text-sm text-gray-700 mt-0.5">{n.message}</div>
+                  {n.title && (
+                    <div className="inline-flex items-center gap-2 text-sm font-semibold text-red-800 bg-red-50 px-2 py-1 rounded">
+                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                      {n.title}
+                    </div>
+                  )}
+                  <div className="text-sm text-gray-800 mt-1">{n.message}</div>
                   <div className="text-xs text-gray-400 mt-1">{new Date(n.createdAt).toLocaleString()}</div>
                 </div>
               ))
             ))}
+          </div>
+        </div>
+      )}
+      {bannerNotice && (
+        <div className="fixed top-12 left-0 w-full z-20 px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl">
+            <div className="rounded-md bg-red-50 border border-red-200 p-3 sm:p-3.5 shadow-sm">
+              <div className="flex items-start gap-2">
+                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-red-100 text-red-700 text-xs font-bold select-none">!</span>
+                <div className="flex-1">
+                  <div className="text-sm font-semibold text-red-800">{bannerNotice.title}</div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
