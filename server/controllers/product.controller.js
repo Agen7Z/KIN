@@ -145,7 +145,7 @@ export const getProducts = async (req, res, next) => {
             .limit(Number(limit))
             .skip((Number(page) - 1) * Number(limit));
         
-        // console.log(`Found ${products.length} products out of ${total} total`);
+
         
         res.status(200).json({ 
             status: "success", 

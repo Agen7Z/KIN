@@ -1015,7 +1015,13 @@ const AdminDashboard = () => {
       {/* Header */}
       <nav className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-50">
         <div className="px-6 py-4 flex items-center justify-between">
-          <h1 className="text-xl font-semibold text-gray-900">KIN Admin Dashboard</h1>
+          <div className="flex items-center gap-3">
+            <a href="/" className="text-2xl font-bold text-gray-900 hover:text-gray-700 transition-colors">
+              KINN
+            </a>
+            <span className="text-gray-400">|</span>
+            <h1 className="text-xl font-semibold text-gray-900">Admin Dashboard</h1>
+          </div>
           <div className="flex items-center space-x-4">
             <div className="text-sm text-gray-600">Welcome, {user?.email ? user.email.split('@')[0] : 'Admin'}</div>
             <button

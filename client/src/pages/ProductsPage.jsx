@@ -12,38 +12,39 @@ const useProducts = (category, gender, page, limit = 12) => {
   const [totalProducts, setTotalProducts] = useState(0)
   const [totalPages, setTotalPages] = useState(0)
   
-  const loadProducts = useCallback(async () => {
-    try {
-      setLoading(true)
-      const params = new URLSearchParams()
-      if (category && category !== 'all') params.set('category', category)
-      if (gender && gender !== 'all') params.set('gender', gender)
-      params.set('page', page)
-      params.set('limit', limit)
-      
-      const res = await apiFetch(`/api/products?${params.toString()}`)
-      const json = await res.json()
-      const products = json?.data?.products || []
-      const total = json?.data?.total || 0
-      
-      setData(products)
-      setTotalProducts(total)
-      setTotalPages(Math.ceil(total / limit))
-    } catch (error) {
-      console.error('Error loading products:', error)
-      setData([])
-      setTotalProducts(0)
-      setTotalPages(0)
-    } finally {
-      setLoading(false)
-    }
-  }, [category, gender, page, limit])
-  
   useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        setLoading(true)
+        const params = new URLSearchParams()
+        if (category && category !== 'all') params.set('category', category)
+        if (gender && gender !== 'all') params.set('gender', gender)
+        params.set('page', page)
+        params.set('limit', limit)
+        
+        const res = await apiFetch(`/api/products?${params.toString()}`)
+        const json = await res.json()
+        const products = json?.data?.products || []
+        const total = json?.data?.total || 0
+        
+
+        setData(products)
+        setTotalProducts(total)
+        setTotalPages(Math.ceil(total / limit))
+      } catch (error) {
+        console.error('Error loading products:', error)
+        setData([])
+        setTotalProducts(0)
+        setTotalPages(0)
+      } finally {
+        setLoading(false)
+      }
+    }
+    
     loadProducts()
-  }, [loadProducts])
+  }, [page, category, gender, limit])
   
-  return { data, loading, totalProducts, totalPages, loadProducts }
+  return { data, loading, totalProducts, totalPages }
 }
 
 const useTrending = () => {
@@ -115,6 +116,8 @@ const ProductsPage = () => {
   const handleCategoryChange = (newCategory) => {
     setSelectedCategory(newCategory)
     setCurrentPage(1) // Reset to first page
+    // Scroll to top when category changes
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
   
   const clearFilters = () => {
@@ -125,6 +128,8 @@ const ProductsPage = () => {
     setSelectedGender(getGenderFromPath())
     setSelectedCategory(category || 'all')
     setCurrentPage(1)
+    // Scroll to top when clearing filters
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
   
   const withinPrice = (price, range) => {
@@ -203,6 +208,7 @@ const ProductsPage = () => {
   // Pagination functions
   const goToPage = (pageNum) => {
     setCurrentPage(pageNum)
+    // Use smooth scroll for better UX
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
   
