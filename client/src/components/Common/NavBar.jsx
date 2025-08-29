@@ -9,26 +9,26 @@ const NavBar = () => {
   const { user } = useAuth()
   return (
     <nav className="fixed top-0 left-0 w-full z-20">
-      <div className="flex justify-between items-center py-4 px-8 bg-transparent">
+      <div className="flex justify-between items-center py-3 sm:py-4 px-4 sm:px-6 lg:px-8 bg-transparent">
         
-       
-        <div className="flex items-center gap-8">
-          <Link to="/" className="text-2xl font-bold text-black">
+        {/* Logo */}
+        <div className="flex items-center gap-4 sm:gap-8">
+          <Link to="/" className="text-xl sm:text-2xl font-bold text-black">
             KINN
           </Link>
           
           {/* Navigation Links removed as per requirement */}
         </div>
 
-        
-        <div className="flex items-center gap-6 text-[20px]">
+        {/* Right side icons */}
+        <div className="flex items-center gap-4 sm:gap-6 text-[18px] sm:text-[20px]">
           <Link
             to={user ? (user.role === 'admin' ? '/admin' : '/profile') : '/login'}
             className="text-black hover:text-gray-700 transition-all duration-300"
             aria-label="Account"
           >
             {user ? (
-              <span className="text-sm font-medium">
+              <span className="text-xs sm:text-sm font-medium">
                 {(user.email?.split('@')[0] || 'User').slice(0, 12)}
               </span>
             ) : (

@@ -104,101 +104,101 @@ const Login = () => {
   return (
     <div className="min-h-screen bg-white">
       <NavBar />
-      <div className="flex items-center justify-center pt-16 pb-10">
-      <div className="w-full max-w-2xl px-8 py-12 text-center">
-        {/* Main Title */}
-        <h1 className="font-display text-4xl sm:text-5xl font-light tracking-[0.25em] mb-6 text-black">
-          MY KINN ACCOUNT
-        </h1>
+      <div className="flex items-center justify-center pt-16 pb-10 px-4 sm:px-6">
+        <div className="w-full max-w-2xl px-4 sm:px-8 py-8 sm:py-12 text-center">
+          {/* Main Title */}
+          <h1 className="font-display text-2xl sm:text-4xl lg:text-5xl font-light tracking-[0.15em] sm:tracking-[0.25em] mb-4 sm:mb-6 text-black">
+            MY KINN ACCOUNT
+          </h1>
 
-        {/* Social Login Button (Google renders here) */}
-        <div className="mb-6 flex justify-center">
-          <div id="google-login-btn-custom" className="w-[320px]" />
-          {!import.meta.env.VITE_GOOGLE_CLIENT_ID && (
-            <div className="w-[320px] p-4 text-center text-sm text-red-500 bg-red-50 border border-red-200 rounded-lg">
-              Google Sign-In not configured. Please check your environment variables.
+          {/* Social Login Button (Google renders here) */}
+          <div className="mb-6 flex justify-center">
+            <div id="google-login-btn-custom" className="w-full max-w-[320px]" />
+            {!import.meta.env.VITE_GOOGLE_CLIENT_ID && (
+              <div className="w-full max-w-[320px] p-4 text-center text-sm text-red-500 bg-red-50 border border-red-200 rounded-lg">
+                Google Sign-In not configured. Please check your environment variables.
+              </div>
+            )}
+          </div>
+
+          {/* Divider */}
+          <div className="relative mb-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-200" />
             </div>
-          )}
-        </div>
-
-        {/* Divider */}
-        <div className="relative mb-6">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-200" />
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="bg-white px-4 text-gray-500 font-medium tracking-wider">
-              OR
-            </span>
-          </div>
-        </div>
-
-        {/* Section Title */}
-        <h2 className="font-display text-lg font-light tracking-[0.18em] mb-2 text-black">
-          CONTINUE WITH YOUR EMAIL ADDRESS
-        </h2>
-        
-        <p className="text-sm text-gray-600 mb-8">
-          Sign in with your email and password or create a profile if you are new.
-        </p>
-
-        {/* Email/Password Form */}
-        <form onSubmit={onSubmit} className="space-y-5 max-w-sm mx-auto">
-          {error && (
-            <div className="text-sm text-red-600 text-left bg-red-50 p-3 border border-red-200">
-              {error}
+            <div className="relative flex justify-center text-sm">
+              <span className="bg-white px-4 text-gray-500 font-medium tracking-wider">
+                OR
+              </span>
             </div>
-          )}
-
-          <div className="text-left">
-            <input
-              type="email"
-              placeholder="Email*"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full border border-black/80 rounded-sm px-4 py-3 text-sm placeholder-gray-500 focus:outline-none focus:border-black bg-transparent"
-              required
-            />
           </div>
 
-          <div className="text-left">
-            <input
-              type="password"
-              placeholder="Password*"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full border border-black/80 rounded-sm px-4 py-3 text-sm placeholder-gray-500 focus:outline-none focus:border-black bg-transparent"
-              required
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full border border-black bg-black py-3.5 text-sm font-medium text-white tracking-[0.15em] hover:bg-gray-900 disabled:opacity-70 disabled:cursor-not-allowed transition-colors mt-2"
-          >
-            {loading ? 'SIGNING IN...' : 'LOGIN'}
-          </button>
-        </form>
-
-        {/* Footer */}
-        <div className="mt-8 pt-6 border-t border-black/10">
-          <h3 className="font-display text-lg font-light tracking-[0.15em] text-black">
-            JOIN MY KINN
-          </h3>
-          <p className="text-sm text-gray-600 mt-2">
-            Don't have an account?{' '}
-            <Link 
-              to="/signup" 
-              className="underline text-black hover:no-underline transition-all"
-            >
-              Create one here
-            </Link>
+          {/* Section Title */}
+          <h2 className="font-display text-base sm:text-lg font-light tracking-[0.15em] sm:tracking-[0.18em] mb-2 text-black">
+            CONTINUE WITH YOUR EMAIL ADDRESS
+          </h2>
+          
+          <p className="text-sm text-gray-600 mb-6 sm:mb-8 px-2">
+            Sign in with your email and password or create a profile if you are new.
           </p>
+
+          {/* Email/Password Form */}
+          <form onSubmit={onSubmit} className="space-y-4 sm:space-y-5 max-w-sm mx-auto">
+            {error && (
+              <div className="text-sm text-red-600 text-left bg-red-50 p-3 border border-red-200 rounded">
+                {error}
+              </div>
+            )}
+
+            <div className="text-left">
+              <input
+                type="email"
+                placeholder="Email*"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full border border-black/80 rounded-sm px-3 sm:px-4 py-2.5 sm:py-3 text-sm placeholder-gray-500 focus:outline-none focus:border-black bg-transparent"
+                required
+              />
+            </div>
+
+            <div className="text-left">
+              <input
+                type="password"
+                placeholder="Password*"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full border border-black/80 rounded-sm px-3 sm:px-4 py-2.5 sm:py-3 text-sm placeholder-gray-500 focus:outline-none focus:border-black bg-transparent"
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full border border-black bg-black py-3 sm:py-3.5 text-sm font-medium text-white tracking-[0.15em] hover:bg-gray-900 disabled:opacity-70 disabled:cursor-not-allowed transition-colors mt-2"
+            >
+              {loading ? 'SIGNING IN...' : 'LOGIN'}
+            </button>
+          </form>
+
+          {/* Footer */}
+          <div className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-black/10">
+            <h3 className="font-display text-base sm:text-lg font-light tracking-[0.15em] text-black">
+              JOIN MY KINN
+            </h3>
+            <p className="text-sm text-gray-600 mt-2">
+              Don't have an account?{' '}
+              <Link 
+                to="/signup" 
+                className="underline text-black hover:no-underline transition-all"
+              >
+                Create one here
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
     </div>
-  </div>
   )
 }
 

@@ -3,53 +3,60 @@ import { Link } from "react-router-dom";
 
 const Hero = () => {
   return (
-    <section className="relative w-full h-screen flex items-center justify-center bg-white">
+    <section className="relative w-full min-h-screen flex flex-col items-center justify-center bg-white">
       
-      <div className="absolute left-0 top-0 w-1/2 h-full overflow-hidden group">
+      {/* Top Section - Men */}
+      <div className="relative w-full h-1/2 overflow-hidden group">
         <img
           src="https://images.pexels.com/photos/31867225/pexels-photo-31867225.jpeg"
           alt="Men"
           className="w-full h-full object-cover filter grayscale group-hover:grayscale-0 transition-all duration-500 group-hover:scale-[1.03]"
         />
 
+        {/* Overlay for better text readability */}
+        <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-all duration-300" />
         
-        <div className="absolute bottom-12 left-1/2 -translate-x-1/2 text-center group-hover:text-white transition-colors duration-300">
-          <span className="block text-black text-3xl font-bold uppercase tracking-widest group-hover:text-white transition-colors duration-300">
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-center group-hover:text-white transition-colors duration-300 z-10">
+          <span className="block text-white text-2xl sm:text-3xl font-bold uppercase tracking-widest group-hover:text-white transition-colors duration-300 drop-shadow-lg">
             Men
           </span>
-          <Link to="/men" className="mt-3 px-6 py-2 bg-black text-white font-medium uppercase tracking-wide rounded-lg shadow hover:bg-white hover:text-black transition-all duration-300 hover:shadow-lg">
+          <Link to="/men" className="mt-3 px-4 sm:px-6 py-2 bg-black text-white font-medium uppercase tracking-wide rounded-lg shadow hover:bg-white hover:text-black transition-all duration-300 hover:shadow-lg text-sm sm:text-base">
             Try Wears
           </Link>
         </div>
       </div>
 
-      
-      <div className="absolute right-0 top-0 w-1/2 h-full overflow-hidden group">
+      {/* Bottom Section - Women */}
+      <div className="relative w-full h-1/2 overflow-hidden group">
         <img
           src="https://images.pexels.com/photos/19064121/pexels-photo-19064121.jpeg"
           alt="Women"
           className="w-full h-full object-cover filter grayscale group-hover:grayscale-0 transition-all duration-500 group-hover:scale-[1.03]"
         />
 
-       
-        <div className="absolute bottom-12 left-1/2 -translate-x-1/2 text-center group-hover:text-white transition-colors duration-300">
-          <span className="block text-red-500 text-3xl font-bold uppercase tracking-widest group-hover:text-white transition-colors duration-300">
+        {/* Overlay for better text readability */}
+        <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-all duration-300" />
+        
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-center group-hover:text-white transition-colors duration-300 z-10">
+          <span className="block text-white text-2xl sm:text-3xl font-bold uppercase tracking-widest group-hover:text-white transition-colors duration-300 drop-shadow-lg">
             Women
           </span>
-          <Link to="/women" className="mt-3 px-6 py-2 bg-red-500 text-white font-medium uppercase tracking-wide rounded-lg shadow hover:bg-white hover:text-black transition-all duration-300 hover:shadow-lg">
+          <Link to="/women" className="mt-3 px-4 sm:px-6 py-2 bg-red-500 text-white font-medium uppercase tracking-wide rounded-lg shadow hover:bg-white hover:text-black transition-all duration-300 hover:shadow-lg text-sm sm:text-base">
             Try Wears
           </Link>
         </div>
       </div>
 
-     
-      <div className="z-10 text-center">
-        <h1 className="text-5xl md:text-7xl font-serif text-white drop-shadow-md uppercase tracking-widest">
-          KINN
-        </h1>
-        <p className="mt-4 text-lg md:text-xl text-white/90 drop-shadow">
-        Keep Keen, Keep KINN
-        </p>
+      {/* Centered Brand Text - Overlay on both sections */}
+      <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
+        <div className="text-center">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-serif text-white drop-shadow-lg uppercase tracking-widest">
+            KINN
+          </h1>
+          <p className="mt-2 sm:mt-4 text-base sm:text-lg md:text-xl text-white/90 drop-shadow-lg">
+            Keep Keen, Keep KINN
+          </p>
+        </div>
       </div>
     </section>
   );

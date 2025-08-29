@@ -99,28 +99,28 @@ const Signup = () => {
   return (
     <div className="min-h-screen bg-white">
       <NavBar />
-      <div className="flex items-center justify-center pt-16 pb-10">
-        <div className="w-full max-w-2xl px-8 py-12 text-center">
-          <h1 className="font-display text-4xl sm:text-5xl font-light tracking-[0.25em] mb-6 text-black">MY KINN ACCOUNT</h1>
+      <div className="flex items-center justify-center pt-16 pb-10 px-4 sm:px-6">
+        <div className="w-full max-w-2xl px-4 sm:px-8 py-8 sm:py-12 text-center">
+          <h1 className="font-display text-2xl sm:text-4xl lg:text-5xl font-light tracking-[0.15em] sm:tracking-[0.25em] mb-4 sm:mb-6 text-black">MY KINN ACCOUNT</h1>
 
-          <h2 className="font-display text-lg font-light tracking-[0.18em] mb-2 text-black">CONTINUE WITH YOUR EMAIL ADDRESS</h2>
-          <p className="text-sm text-gray-600 mb-8">Create your account using email and password.</p>
+          <h2 className="font-display text-base sm:text-lg font-light tracking-[0.15em] sm:tracking-[0.18em] mb-2 text-black">CONTINUE WITH YOUR EMAIL ADDRESS</h2>
+          <p className="text-sm text-gray-600 mb-6 sm:mb-8 px-2">Create your account using email and password.</p>
 
-          <form onSubmit={onSubmit} className="space-y-5 max-w-sm mx-auto">
-            {error && <p className="text-sm text-red-600 text-left bg-red-50 p-3 border border-red-200">{error}</p>}
+          <form onSubmit={onSubmit} className="space-y-4 sm:space-y-5 max-w-sm mx-auto">
+            {error && <p className="text-sm text-red-600 text-left bg-red-50 p-3 border border-red-200 rounded">{error}</p>}
             <div className="text-left">
-              <input type="email" value={email} onChange={(e)=>setEmail(e.target.value)} placeholder="Email*" required className="w-full border border-black/80 rounded-sm px-4 py-3 text-sm placeholder-gray-500 focus:outline-none focus:border-black bg-transparent" />
+              <input type="email" value={email} onChange={(e)=>setEmail(e.target.value)} placeholder="Email*" required className="w-full border border-black/80 rounded-sm px-3 sm:px-4 py-2.5 sm:py-3 text-sm placeholder-gray-500 focus:outline-none focus:border-black bg-transparent" />
             </div>
             <div className="text-left">
-              <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e)=>setPassword(e.target.value)} placeholder="Password*" required className="w-full border border-black/80 rounded-sm px-4 py-3 text-sm placeholder-gray-500 focus:outline-none focus:border-black bg-transparent" />
+              <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e)=>setPassword(e.target.value)} placeholder="Password*" required className="w-full border border-black/80 rounded-sm px-3 sm:px-4 py-2.5 sm:py-3 text-sm placeholder-gray-500 focus:outline-none focus:border-black bg-transparent" />
             </div>
-            <button type="submit" disabled={loading} className="w-full border border-black bg-black py-3.5 text-sm font-medium text-white tracking-[0.15em] hover:bg-gray-900 disabled:opacity-70 disabled:cursor-not-allowed transition-colors mt-2">
+            <button type="submit" disabled={loading} className="w-full border border-black bg-black py-3 sm:py-3.5 text-sm font-medium text-white tracking-[0.15em] hover:bg-gray-900 disabled:opacity-70 disabled:cursor-not-allowed transition-colors mt-2">
               {loading ? 'CREATING…' : 'SIGN UP'}
             </button>
           </form>
 
-          <div className="mt-8 pt-6 border-t border-black/10">
-            <h3 className="font-display text-lg font-light tracking-[0.15em] text-black">ALREADY HAVE AN ACCOUNT?</h3>
+          <div className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-black/10">
+            <h3 className="font-display text-base sm:text-lg font-light tracking-[0.15em] text-black">ALREADY HAVE AN ACCOUNT?</h3>
             <p className="text-sm text-gray-600 mt-2">Return to <Link to="/login" className="underline text-black hover:no-underline transition-all">Sign in</Link></p>
           </div>
         </div>

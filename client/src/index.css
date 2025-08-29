@@ -11,3 +11,34 @@ html, body, #root {
 .font-display{
   font-family: 'Cormorant Garamond', serif;
 }
+
+/* Global responsive utilities */
+@media (max-width: 640px) {
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+/* Improve touch targets on mobile */
+@media (max-width: 768px) {
+  button, a, input, select, textarea {
+    min-height: 44px;
+  }
+}
+
+/* Smooth scrolling for better mobile experience */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Better focus states for accessibility */
+button:focus, a:focus, input:focus, select:focus, textarea:focus {
+  outline: 2px solid #000;
+  outline-offset: 2px;
+}
+
+/* Prevent horizontal scroll on mobile */
+body {
+  overflow-x: hidden;
+}

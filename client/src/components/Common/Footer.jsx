@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import apiFetch from '../../utils/api'
 
 const Footer = () => {
-  const col = 'space-y-4'
+  const col = 'space-y-3 sm:space-y-4'
   const link = 'block text-sm text-neutral-700 hover:text-black'
   const [email, setEmail] = useState('')
   const [status, setStatus] = useState('')
@@ -71,8 +71,8 @@ const Footer = () => {
   }
 
   return (
-    <footer className="mt-24 border-t border-black/10 bg-white">
-      <div className="max-w-6xl mx-auto px-6 py-16 sm:py-20 lg:py-24 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12">
+    <footer className="mt-16 sm:mt-20 lg:mt-24 border-t border-black/10 bg-white">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-12">
         <div className={col}>
           <h4 className="text-xs tracking-[0.2em] text-black pb-3 border-b border-black/10 inline-block">HELP</h4>
           <p className="text-sm text-neutral-700">Contact us at <a className="underline hover:text-black" href="mailto:info.azrael2169@gmail.com">info.azrael2169@gmail.com</a></p>
@@ -95,18 +95,18 @@ const Footer = () => {
         <div className={col}>
           <h4 className="text-xs tracking-[0.2em] text-black pb-3 border-b border-black/10 inline-block">CONNECT</h4>
           <p className="text-sm text-neutral-700">Sign up for emails to receive latest news, pre‑launches and collections.</p>
-          <form onSubmit={onJoin} className="flex items-center gap-2">
+          <form onSubmit={onJoin} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mt-3">
             <input value={email} onChange={(e)=>setEmail(e.target.value)} className="flex-1 border border-black/40 rounded-sm px-3 py-2 text-sm placeholder-neutral-500 focus:outline-none focus:border-black" placeholder="Email address" />
-            <button disabled={loading} className="px-5 py-2 border border-black bg-black text-white text-xs tracking-widest hover:bg-black/85 disabled:opacity-60">{loading ? 'SENDING…' : 'JOIN'}</button>
+            <button disabled={loading} className="px-5 py-2 border border-black bg-black text-white text-xs tracking-widest hover:bg-black/85 disabled:opacity-60 whitespace-nowrap">{loading ? 'SENDING…' : 'JOIN'}</button>
           </form>
           {status && <p className="text-xs text-neutral-600 pt-1">{status}</p>}
         </div>
       </div>
       <div className="border-t border-black/10" />
       <div className="border-t border-black/10">
-        <div className="max-w-6xl mx-auto px-6 py-8 lg:py-10 flex flex-col sm:flex-row items-center justify-between gap-6">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10 flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6">
           <div className="text-xs text-neutral-600">© {new Date().getFullYear()} KINN</div>
-          <div className="flex items-center gap-6 text-xs">
+          <div className="flex items-center gap-4 sm:gap-6 text-xs">
             <a href="#" className="text-neutral-700 hover:text-black">Sitemap</a>
             <a href="#" className="text-neutral-700 hover:text-black">Legal & privacy</a>
           </div>

@@ -173,11 +173,30 @@ export const getTrendingProducts = async (req, res, next) => {
 export const getProductBySlug = async (req, res, next) => {
     try {
         const { slug } = req.params;
+        console.log('Fetching product by slug:', slug);
+        
         const product = await Product.findOne({ slug, isActive: true })
-            .populate({ path: 'reviews.user', select: 'username email' });
-        if (!product) return next(new AppError("Product not found", 404));
-        res.status(200).json({ status: "success", data: { product } });
+            .populate({ 
+                path: 'reviews.user', 
+                select: 'username email',
+                options: { lean: true }
+            });
+            
+        if (!product) {
+            return next(new AppError("Product not found", 404));
+        }
+        
+        console.log('Product found:', { 
+            name: product.name, 
+            reviewsCount: product.reviews?.length || 0 
+        });
+        
+        res.status(200).json({ 
+            status: "success", 
+            data: { product } 
+        });
     } catch (error) {
+        console.error('Error fetching product by slug:', error);
         next(error);
     }
 };
@@ -186,15 +205,51 @@ export const addReview = async (req, res, next) => {
     try {
         const { slug } = req.params;
         const { rating, comment } = req.body;
-        if (!rating) return next(new AppError("Rating is required", 400));
+        
+        console.log('Review submission:', { slug, rating, comment, userId: req.user?.id });
+        
+        if (!rating) {
+            return next(new AppError("Rating is required", 400));
+        }
+        
+        if (rating < 1 || rating > 5) {
+            return next(new AppError("Rating must be between 1 and 5", 400));
+        }
+        
         const product = await Product.findOne({ slug, isActive: true });
-        if (!product) return next(new AppError("Product not found", 404));
-        const already = product.reviews.find((r) => String(r.user) === String(req.user.id));
-        if (already) return next(new AppError("You have already reviewed this product", 400));
-        product.reviews.push({ user: req.user.id, rating: Number(rating), comment });
+        if (!product) {
+            return next(new AppError("Product not found", 404));
+        }
+        
+        // Check if user has already reviewed this product
+        const alreadyReviewed = product.reviews.find((r) => String(r.user) === String(req.user.id));
+        if (alreadyReviewed) {
+            return next(new AppError("You have already reviewed this product", 400));
+        }
+        
+        // Add the review
+        const newReview = {
+            user: req.user.id,
+            rating: Number(rating),
+            comment: comment || '',
+            createdAt: new Date()
+        };
+        
+        product.reviews.push(newReview);
         await product.save();
-        res.status(201).json({ status: "success", data: { reviews: product.reviews } });
+        
+        console.log('Review added successfully:', newReview);
+        
+        res.status(201).json({ 
+            status: "success", 
+            message: "Review added successfully",
+            data: { 
+                review: newReview,
+                totalReviews: product.reviews.length 
+            } 
+        });
     } catch (error) {
+        console.error('Error adding review:', error);
         next(error);
     }
 };

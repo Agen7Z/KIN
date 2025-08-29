@@ -20,6 +20,9 @@ router.get('/', getProducts);
 router.get('/trending/top', getTrendingProducts);
 router.get('/:slug', getProductBySlug);
 
+// User review route (protected but not admin-only)
+router.post('/:slug/reviews', protect, addReview);
+
 // Protected routes (admin only)
 router.use(protect);
 router.use(restrictTo('admin'));
@@ -30,9 +33,6 @@ router.post('/bulk-import', bulkImportProducts);
 router.delete('/delete-all', deleteAllProducts);
 router.patch('/:id', updateProduct);
 router.delete('/:id', deleteProduct);
-
-// User review route (protected but not admin-only)
-router.post('/:slug/reviews', addReview);
 
 export default router;
 

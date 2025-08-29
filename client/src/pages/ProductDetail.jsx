@@ -180,12 +180,19 @@ const ProductDetail = () => {
                   slug={product.slug}
                   onSubmitted={async () => {
                     try {
+                      console.log('Refreshing product data after review submission...');
                       const res = await apiFetch(`/api/products/${product.slug}`)
+                      if (!res.ok) {
+                        throw new Error(`Failed to refresh product: ${res.status}`);
+                      }
                       const json = await res.json()
+                      console.log('Updated product data:', json?.data?.product);
                       setProduct(json?.data?.product || product)
-                      show('Review added', { type: 'success' })
-                    } catch {
-                      // Handle error silently
+                      show('Review added successfully!', { type: 'success' })
+                    } catch (error) {
+                      console.error('Failed to refresh product data:', error)
+                      // Still show success message even if refresh fails
+                      show('Review added successfully!', { type: 'success' })
                     }
                   }}
                 />
@@ -272,21 +279,40 @@ const ReviewForm = ({ slug, onSubmitted }) => {
 
   const submit = async (e) => {
     e.preventDefault()
+    console.log('Submitting review:', { rating, comment, slug })
+    
     try {
       const token = localStorage.getItem('kin_auth') ? JSON.parse(localStorage.getItem('kin_auth')).token : null
+      console.log('Auth token:', token ? 'Present' : 'Missing')
+      
+      if (!token) {
+        show('Please log in to add a review', { type: 'error' })
+        return
+      }
+
       const res = await apiFetch(`/api/products/${slug}/reviews`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ rating, comment }),
       })
+      
+      console.log('Review submission response:', res.status, res.statusText)
+      
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
+        console.error('Review submission error response:', err)
         throw new Error(err.message || 'Failed to add review')
       }
+      
+      const responseData = await res.json()
+      console.log('Review submission success:', responseData)
+      
       setComment('')
       setRating(5)
+      show('Review submitted successfully!', { type: 'success' })
       if (onSubmitted) onSubmitted()
     } catch (e) {
+      console.error('Review submission error:', e)
       show(e.message || 'Failed to add review', { type: 'error' })
     }
   }
@@ -298,24 +324,59 @@ const ReviewForm = ({ slug, onSubmitted }) => {
     >
       <h4 className="text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wide">Write a review</h4>
 
-      <div className="flex items-center gap-4 mb-3">
-        <StarRow value={rating} size="lg" />
-        <span className="text-xs text-gray-500">Tap to rate</span>
+      <div className="mb-3">
+        <label className="block text-sm font-medium text-gray-700 mb-2">Rating</label>
+        <div className="flex items-center gap-1">
+          {[1, 2, 3, 4, 5].map((star) => (
+            <button
+              key={star}
+              type="button"
+              onClick={() => setRating(star)}
+              className="focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded"
+            >
+              <Star
+                className={`h-6 w-6 transition-colors ${
+                  star <= rating 
+                    ? 'fill-yellow-400 text-yellow-400' 
+                    : 'text-gray-300 hover:text-yellow-300'
+                }`}
+              />
+            </button>
+          ))}
+          <span className="ml-2 text-sm text-gray-500">({rating}/5)</span>
+        </div>
       </div>
 
-      <div className="flex gap-3">
+      <div className="mb-4">
+        <label htmlFor="comment" className="block text-sm font-medium text-gray-700 mb-2">
+          Comment (optional)
+        </label>
         <textarea
-          className="flex-1 border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900/30"
+          id="comment"
+          className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900/30"
           rows={3}
-          placeholder="Share your thoughts..."
+          placeholder="Share your thoughts about this product..."
           value={comment}
           onChange={(e) => setComment(e.target.value)}
         />
+      </div>
+
+      <div className="flex gap-3">
         <button
           type="submit"
-          className="self-start bg-gray-900 text-white px-5 py-2.5 rounded-xl text-sm hover:bg-black shadow-md"
+          className="bg-gray-900 text-white px-5 py-2.5 rounded-xl text-sm hover:bg-black shadow-md transition-all"
         >
-          Submit
+          Submit Review
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setComment('')
+            setRating(5)
+          }}
+          className="border border-gray-200 text-gray-700 px-5 py-2.5 rounded-xl text-sm hover:bg-gray-50 transition-all"
+        >
+          Clear
         </button>
       </div>
     </form>
