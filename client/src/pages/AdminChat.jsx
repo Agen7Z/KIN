@@ -33,6 +33,9 @@ const AdminChat = () => {
   const [adminMsgText, setAdminMsgText] = useState('')
   const [users, setUsers] = useState([])
   const activeUser = users.find(u => String(u._id) === String(activeChatUserId))
+  
+  // Get messages for the active chat
+  const messages = activeChatUserId ? (chatThreads[activeChatUserId] || []) : []
   const initialsFromEmail = (email) => {
     if (!email) return 'NA'
     const name = String(email).split('@')[0]
