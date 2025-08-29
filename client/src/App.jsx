@@ -21,6 +21,7 @@ import Checkout from './pages/Checkout'
 import OrderDetail from './pages/OrderDetail'
 import OrdersList from './pages/OrdersList'
 import About from './pages/About'
+import Chat from './pages/Chat'
 
 // Protected Route Component
 const ProtectedRoute = ({ children, requiredRole = null }) => {
@@ -78,6 +79,7 @@ const App = () => {
             <Route path='/orders/:id' element={<ProtectedRoute><OrderDetail /></ProtectedRoute>} />
             <Route path='/orders' element={<ProtectedRoute><OrdersList /></ProtectedRoute>} />
             <Route path='/about' element={<About />} />
+            <Route path='/chat' element={<ProtectedRoute><Chat /></ProtectedRoute>} />
           </Routes>
           <CartDrawer />
           <Footer />

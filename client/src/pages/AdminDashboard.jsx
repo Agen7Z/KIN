@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useCallback } from 'react'
 import apiFetch from '../utils/api'
-import { Package, Users, ShoppingCart, Plus, Trash2, Eye, Edit3, Home, Menu, X, Megaphone } from 'lucide-react'
+import { Package, Users, ShoppingCart, Plus, Trash2, Eye, Edit3, Home, Menu, X, Megaphone, MessageSquare } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import ImageUpload from '../components/Admin/ImageUpload.jsx'
 import { useToast } from '../hooks/useToast'
+import { useSocket } from '../context/SocketContext.jsx'
 
 const AdminDashboard = () => {
   const { user, logout } = useAuth()
@@ -26,6 +27,10 @@ const AdminDashboard = () => {
   const [filteredProducts, setFilteredProducts] = useState([])
   const [noticeForm, setNoticeForm] = useState({ title: '', message: '' })
   const [sendingNotice, setSendingNotice] = useState(false)
+  const { chatThreads, fetchRecent, setActiveChatUserId, activeChatUserId, adminSendMessage, typingState, setTyping, fetchThread } = useSocket()
+  const [recentChats, setRecentChats] = useState([])
+  const [userSearch, setUserSearch] = useState('')
+  const [adminMsgText, setAdminMsgText] = useState('')
 
   // Safety function to ensure state is always an array
   const ensureArray = (value) => {
@@ -363,7 +368,8 @@ const AdminDashboard = () => {
     { id: 'add-product', label: 'Add Product', icon: Plus },
     { id: 'users', label: 'Manage Users', icon: Users },
     { id: 'orders', label: 'Orders', icon: ShoppingCart },
-    { id: 'notices', label: 'Send Notice', icon: Megaphone }
+    { id: 'notices', label: 'Send Notice', icon: Megaphone },
+    { id: 'messages', label: 'Messages', icon: MessageSquare }
   ]
 
   // Ensure state is always arrays before rendering
@@ -1067,6 +1073,95 @@ const AdminDashboard = () => {
     </div>
   )
 
+  const renderMessages = () => {
+    useEffect(() => {
+      if (activeSection !== 'messages') return
+      fetchRecent((list) => setRecentChats(list))
+    }, [activeSection])
+
+    const messages = activeChatUserId ? (chatThreads[activeChatUserId] || []) : []
+
+    return (
+      <div className="space-y-6">
+        <h1 className="text-2xl font-bold text-gray-900">Messages</h1>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 md:col-span-1">
+            <div className="p-4 border-b space-y-2">
+              <div className="font-medium">Users</div>
+              <input
+                value={userSearch}
+                onChange={(e)=>setUserSearch(e.target.value)}
+                placeholder="Search userId or text"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+              />
+            </div>
+            <div className="max-h-[480px] overflow-y-auto divide-y">
+              {recentChats.length === 0 && (
+                <div className="p-4 text-sm text-gray-500">No conversations yet</div>
+              )}
+              {recentChats
+                .filter(c => !userSearch || c.userId.toLowerCase().includes(userSearch.toLowerCase()) || (c.lastText||'').toLowerCase().includes(userSearch.toLowerCase()))
+                .sort((a,b)=> (b.ts||0)-(a.ts||0))
+                .map((c) => (
+                <button
+                  key={c.userId}
+                  onClick={() => { setActiveChatUserId(c.userId) }}
+                  className={`w-full text-left p-4 hover:bg-gray-50 ${activeChatUserId === c.userId ? 'bg-blue-50' : ''}`}
+                >
+                  <div className="text-sm font-medium">{c.username || c.email || c.userId}</div>
+                  <div className="text-xs text-gray-500 truncate">{c.email}</div>
+                  <div className="text-xs text-gray-500 truncate">{c.lastFrom === 'admin' ? 'You: ' : ''}{c.lastText}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 md:col-span-2 flex flex-col">
+            <div className="p-4 border-b flex items-center justify-between">
+              <span className="font-medium">{activeChatUserId ? `Chat with ${activeChatUserId}` : 'Select a conversation'}</span>
+            </div>
+            <div className="flex-1 p-4 overflow-y-auto space-y-2 min-h-[360px]">
+              {(!activeChatUserId || messages.length === 0) && (
+                <div className="text-sm text-gray-500">{!activeChatUserId ? 'Choose a user from the left to start' : 'No messages yet'}</div>
+              )}
+              {messages.map((m, idx) => (
+                <div key={idx} className={`flex ${m.from === 'admin' ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`px-3 py-2 rounded-lg text-sm max-w-[70%] ${m.from === 'admin' ? 'bg-neutral-900 text-white' : 'bg-gray-100 text-gray-900'}`}>
+                    {m.text}
+                  </div>
+                </div>
+              ))}
+              {activeChatUserId && typingState[activeChatUserId]?.from === 'user' && typingState[activeChatUserId]?.isTyping && (
+                <div className="text-xs text-gray-500">User is typing…</div>
+              )}
+            </div>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                if (!activeChatUserId) return
+                const t = adminMsgText.trim()
+                if (!t) return
+                adminSendMessage(activeChatUserId, t)
+                setAdminMsgText('')
+              }}
+              className="p-4 border-t flex items-center gap-2"
+            >
+              <input
+                value={adminMsgText}
+                onChange={(e) => setAdminMsgText(e.target.value)}
+                onFocus={() => activeChatUserId && setTyping(true, activeChatUserId)}
+                onBlur={() => activeChatUserId && setTyping(false, activeChatUserId)}
+                placeholder={activeChatUserId ? 'Type a message' : 'Select a conversation'}
+                disabled={!activeChatUserId}
+                className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm disabled:bg-gray-100"
+              />
+              <button disabled={!activeChatUserId} className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-2 rounded-lg disabled:opacity-50">Send</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   const renderContent = () => {
     switch (activeSection) {
       case 'overview': return renderOverview()
@@ -1075,6 +1170,7 @@ const AdminDashboard = () => {
       case 'users': return renderUsers()
       case 'orders': return renderOrders()
       case 'notices': return renderNotices()
+      case 'messages': return renderMessages()
       default: return renderOverview()
     }
   }

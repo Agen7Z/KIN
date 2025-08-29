@@ -1,6 +1,6 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-import { HiOutlineUser, HiOutlineShoppingCart, HiOutlineBell } from 'react-icons/hi'
+import { HiOutlineUser, HiOutlineShoppingCart, HiOutlineBell, HiOutlineChatAlt2 } from 'react-icons/hi'
 import { useCart } from '../../hooks/useCart'
 import { useAuth } from '../../hooks/useAuth'
 import apiFetch from '../../utils/api'
@@ -52,6 +52,11 @@ const NavBar = () => {
 
         {/* Right side icons */}
         <div className="flex items-center gap-3 sm:gap-4 lg:gap-6 text-[18px] sm:text-[20px]">
+          {user && user.role !== 'admin' && (
+            <Link to="/chat" className="text-black hover:text-gray-700 transition-all duration-300 relative flex items-center" aria-label="Messages">
+              <HiOutlineChatAlt2 />
+            </Link>
+          )}
           {user && user.role !== 'admin' && (
             <button onClick={() => setOpen(o => !o)} className="text-black hover:text-gray-700 transition-all duration-300 relative flex items-center" aria-label="Notifications">
               <HiOutlineBell />

@@ -159,6 +159,9 @@ const server = app.listen(port, () => {
 
 // Initialize Socket.IO
 import { Server as SocketIOServer } from 'socket.io';
+import jwt from 'jsonwebtoken';
+import Message from './models/message.model.js';
+import User from './models/user.model.js';
 const io = new SocketIOServer(server, {
   cors: {
     origin: (
@@ -179,10 +182,147 @@ const io = new SocketIOServer(server, {
 
 app.set('io', io);
 
+// In-memory chat store and presence (resets on server restart)
+const userIdToSocketIds = new Map(); // userId -> Set(socketId)
+const adminSocketIds = new Set();
+const conversations = new Map(); // userId -> [{ from: 'user'|'admin', text, ts }]
+
+const addUserSocket = (userId, socketId) => {
+  if (!userIdToSocketIds.has(userId)) userIdToSocketIds.set(userId, new Set());
+  userIdToSocketIds.get(userId).add(socketId);
+};
+const removeUserSocket = (userId, socketId) => {
+  const set = userIdToSocketIds.get(userId);
+  if (set) {
+    set.delete(socketId);
+    if (set.size === 0) userIdToSocketIds.delete(userId);
+  }
+};
+const pushMessage = (userId, message) => {
+  if (!conversations.has(userId)) conversations.set(userId, []);
+  conversations.get(userId).push(message);
+};
+
 io.on('connection', (socket) => {
-  // Optionally, authenticate user via token sent in query/headers later
+  // Lightweight auth using JWT provided via handshake auth
+  let authedUser = null;
+  try {
+    const token = socket.handshake?.auth?.token;
+    if (token) {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      authedUser = { id: decoded.id, role: decoded.role };
+    }
+  } catch {}
+
+  if (authedUser?.id) {
+    socket.data.userId = authedUser.id;
+    socket.data.role = authedUser.role || 'user';
+    socket.join(`user:${authedUser.id}`);
+    addUserSocket(authedUser.id, socket.id);
+    if (socket.data.role === 'admin') adminSocketIds.add(socket.id);
+  }
+
+  // User/Admin requests conversation. Admin can specify { userId }. Supports pagination: { limit=20, beforeTs }
+  socket.on('chat:get_thread', async (payloadOrCb, maybeCb) => {
+    const payload = typeof payloadOrCb === 'function' ? {} : (payloadOrCb || {})
+    const cb = typeof payloadOrCb === 'function' ? payloadOrCb : maybeCb
+    let userId = socket.data.userId
+    if (socket.data.role === 'admin' && payload?.userId) userId = String(payload.userId)
+    if (!userId) { if (typeof cb === 'function') cb([]); return }
+    try {
+      const limit = Math.min(Math.max(Number(payload?.limit) || 20, 1), 100)
+      const beforeTs = payload?.beforeTs ? new Date(Number(payload.beforeTs)) : null
+      const criteria = beforeTs ? { userId, createdAt: { $lt: beforeTs } } : { userId }
+      const docs = await Message.find(criteria).sort({ createdAt: -1 }).limit(limit).lean()
+      const thread = docs.reverse().map(d => ({ from: d.from, text: d.text, ts: new Date(d.createdAt).getTime() }))
+      if (!thread.length && conversations.has(userId)) {
+        const mem = conversations.get(userId) || []
+        if (typeof cb === 'function') cb(mem)
+      } else {
+        if (typeof cb === 'function') cb(thread)
+      }
+    } catch {
+      const mem = conversations.get(userId) || []
+      if (typeof cb === 'function') cb(mem)
+    }
+  });
+
+  // Admin requests recent conversations list with user info, sorted by latest message
+  socket.on('chat:get_recent', async (cb) => {
+    if (socket.data.role !== 'admin') return;
+    try {
+      const agg = await Message.aggregate([
+        { $sort: { createdAt: -1 } },
+        { $group: { _id: '$userId', lastText: { $first: '$text' }, lastFrom: { $first: '$from' }, ts: { $first: '$createdAt' } } },
+        { $sort: { ts: -1 } },
+        { $limit: 200 },
+        { $lookup: { from: 'users', localField: '_id', foreignField: '_id', as: 'user' } },
+        { $unwind: { path: '$user', preserveNullAndEmptyArrays: true } },
+        { $project: { userId: '$_id', lastText: 1, lastFrom: 1, ts: 1, username: '$user.username', email: '$user.email' } }
+      ])
+      const list = agg.map(r => ({
+        userId: String(r.userId),
+        lastText: r.lastText || '',
+        lastFrom: r.lastFrom || 'user',
+        ts: r.ts instanceof Date ? r.ts.getTime() : Date.now(),
+        username: r.username || '',
+        email: r.email || ''
+      }))
+      if (typeof cb === 'function') cb(list)
+    } catch {
+      const list = Array.from(conversations.entries()).map(([userId, msgs]) => {
+        const last = msgs[msgs.length - 1];
+        return { userId, lastText: last?.text || '', lastFrom: last?.from || 'user', ts: last?.ts || Date.now() };
+      }).sort((a, b) => b.ts - a.ts);
+      if (typeof cb === 'function') cb(list);
+    }
+  });
+
+  // User sends message to admin(s)
+  socket.on('chat:user_message', async (payload) => {
+    if (!socket.data.userId || !payload?.text) return;
+    const msg = { from: 'user', text: String(payload.text).slice(0, 1000), ts: Date.now() };
+    pushMessage(socket.data.userId, msg);
+    try { await Message.create({ userId: socket.data.userId, from: 'user', text: msg.text }) } catch {}
+    // notify all admins
+    adminSocketIds.forEach((sid) => io.to(sid).emit('chat:message', { userId: socket.data.userId, ...msg }));
+    adminSocketIds.forEach((sid) => io.to(sid).emit('chat:notification', { userId: socket.data.userId, text: msg.text }));
+  });
+
+  // Admin sends message to a specific user
+  socket.on('chat:admin_message', async (payload) => {
+    if (socket.data.role !== 'admin' || !payload?.toUserId || !payload?.text) return;
+    const toUserId = String(payload.toUserId);
+    const msg = { from: 'admin', text: String(payload.text).slice(0, 1000), ts: Date.now() };
+    pushMessage(toUserId, msg);
+    try { await Message.create({ userId: toUserId, from: 'admin', text: msg.text }) } catch {}
+    io.to(`user:${toUserId}`).emit('chat:message', { userId: toUserId, ...msg });
+    io.to(`user:${toUserId}`).emit('chat:notification', { text: msg.text });
+    // Echo back to all admins to update their UI
+    adminSocketIds.forEach((sid) => io.to(sid).emit('chat:message', { userId: toUserId, ...msg }));
+  });
+
+  // Typing indicators
+  socket.on('chat:typing', (payload) => {
+    const isTyping = !!payload?.isTyping
+    if (socket.data.role === 'admin') {
+      // Admin typing to specific user
+      const toUserId = String(payload?.toUserId || '')
+      if (!toUserId) return
+      io.to(`user:${toUserId}`).emit('chat:typing', { from: 'admin', isTyping })
+    } else {
+      // User typing, broadcast to admins
+      adminSocketIds.forEach((sid) => io.to(sid).emit('chat:typing', { from: 'user', userId: socket.data.userId, isTyping }))
+    }
+  })
+
   socket.on('disconnect', () => {
-    // client disconnected
+    if (socket.data?.role === 'admin') {
+      adminSocketIds.delete(socket.id);
+    }
+    if (socket.data?.userId) {
+      removeUserSocket(socket.data.userId, socket.id);
+    }
   });
 });
 
