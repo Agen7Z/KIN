@@ -109,49 +109,48 @@ const AdminChat = () => {
       </nav>
 
       <div className="pt-20 h-screen flex">
-        {/* Sidebar */}
-        <div className="w-80 sidebar-bg border-r border-custom flex flex-col" style={{backgroundColor:'#1a1a1a'}}>
-          <style>{`.sidebar-text{color:#e5e5e5}.sidebar-muted{color:#a3a3a3}.sidebar-hover:hover{background-color:#2a2a2a}.sidebar-active{background-color:#2a2a2a;border-right:2px solid #f97316}.border-custom{border-color:#e5e7eb}`}</style>
-          <div className="p-6 border-b border-custom">
+        {/* Sidebar - Changed to white background */}
+        <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
+          <div className="p-6 border-b border-gray-200">
             <div className="flex items-center justify-between mb-4">
-              <div className="text-xl font-semibold sidebar-text">Conversations</div>
-              <Button variant="ghost" size="icon" className="sidebar-text sidebar-hover"><MoreVertical className="h-5 w-5" /></Button>
+              <div className="text-xl font-semibold text-[#121212]">Conversations</div>
+              <Button variant="ghost" size="icon" className="text-[#121212] hover:bg-gray-100"><MoreVertical className="h-5 w-5" /></Button>
             </div>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 sidebar-muted h-4 w-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input placeholder="Search..." value={userSearch} onChange={(e)=>setUserSearch(e.target.value)} className="pl-10 bg-white" />
             </div>
           </div>
           <div className="flex-1 overflow-y-auto">
             {mergedUsers.map((c) => (
-              <div key={c.userId} onClick={()=>{ setActiveChatUserId(c.userId); fetchThread(c.userId, undefined, { limit: 20 }) }} className={`p-4 sidebar-hover cursor-pointer transition-colors ${activeChatUserId===c.userId ? 'sidebar-active':''}`}>
+              <div key={c.userId} onClick={()=>{ setActiveChatUserId(c.userId); fetchThread(c.userId, undefined, { limit: 20 }) }} className={`p-4 hover:bg-gray-50 cursor-pointer transition-colors ${activeChatUserId===c.userId ? 'bg-gray-100 border-r-2 border-orange-500':''}`}>
                 <div className="flex items-center space-x-3">
                   <Avatar className="h-12 w-12">
-                    <AvatarFallback className="bg-orange-500 text-white">{initialsFromEmail(c.email || c.username || c.userId)}</AvatarFallback>
+                    <AvatarFallback className="bg-[#121212] text-white">{initialsFromEmail(c.email || c.username || c.userId)}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
-                      <p className="text-sm font-medium sidebar-text truncate">{c.username || c.email || c.userId}</p>
-                      <span className="text-xs sidebar-muted">{c.ts ? new Date(c.ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : ''}</span>
+                      <p className="text-sm font-medium text-[#121212] truncate">{c.username || c.email || c.userId}</p>
+                      <span className="text-xs text-gray-500">{c.ts ? new Date(c.ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : ''}</span>
                     </div>
-                    <p className="text-sm sidebar-muted truncate">{c.lastFrom==='admin' ? 'You: ' : ''}{c.lastText || 'No messages yet'}</p>
+                    <p className="text-sm text-gray-600 truncate">{c.lastFrom==='admin' ? 'You: ' : ''}{c.lastText || 'No messages yet'}</p>
                   </div>
                 </div>
               </div>
             ))}
-            {mergedUsers.length===0 && (<div className="p-4 text-sm sidebar-muted">No users found</div>)}
+            {mergedUsers.length===0 && (<div className="p-4 text-sm text-gray-500">No users found</div>)}
           </div>
         </div>
 
         {/* Main Chat Area */}
         <div className="flex-1 flex flex-col">
-          <div className="bg-white border-b border-custom p-4 flex items-center justify-between">
+          <div className="bg-white border-b border-gray-200 p-4 flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <Avatar className="h-10 w-10">
-                <AvatarFallback className="bg-orange-500 text-white">{initialsFromEmail(activeUser?.email)}</AvatarFallback>
+                <AvatarFallback className="bg-[#121212] text-white">{initialsFromEmail(activeUser?.email)}</AvatarFallback>
               </Avatar>
               <div>
-                <div className="font-semibold text-gray-900">{activeChatUserId ? `User ${activeChatUserId}` : 'Select a conversation'}</div>
+                <div className="font-semibold text-[#121212]">{activeChatUserId ? `User ${activeChatUserId}` : 'Select a conversation'}</div>
                 {activeChatUserId && (
                   <div className="flex items-center space-x-2">
                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
@@ -169,14 +168,14 @@ const AdminChat = () => {
                 <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center border border-gray-200">
                   <MessageSquare className="w-8 h-8 text-gray-500" />
                 </div>
-                <div className="text-lg font-semibold text-gray-900 mb-2">{!activeChatUserId ? 'Choose a user to start chatting' : 'No messages yet'}</div>
+                <div className="text-lg font-semibold text-[#121212] mb-2">{!activeChatUserId ? 'Choose a user to start chatting' : 'No messages yet'}</div>
                 <div className="text-gray-600">{!activeChatUserId ? 'Select a user from the left to begin a conversation' : 'Start the conversation by sending a message'}</div>
               </div>
             )}
 
             {messages.map((m, idx) => (
               <div key={idx} className={`flex ${m.from === 'admin' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`p-4 rounded-lg shadow-sm transition-shadow max-w-xs lg:max-w-md ${m.from==='admin' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'}`}>
+                <div className={`p-4 rounded-lg shadow-sm transition-shadow max-w-xs lg:max-w-md ${m.from==='admin' ? 'bg-[#F14D4C] text-white' : 'bg-gray-100 text-[#121212]'}`}>
                   <div className="text-sm leading-relaxed">{m.text}</div>
                 </div>
               </div>
@@ -195,12 +194,12 @@ const AdminChat = () => {
             )}
           </div>
 
-          <form onSubmit={(e)=>{ e.preventDefault(); if (!activeChatUserId) return; const t = adminMsgText.trim(); if(!t) return; adminSendMessage(activeChatUserId, t); setAdminMsgText('') }} className="border-t border-custom p-4 bg-white">
+          <form onSubmit={(e)=>{ e.preventDefault(); if (!activeChatUserId) return; const t = adminMsgText.trim(); if(!t) return; adminSendMessage(activeChatUserId, t); setAdminMsgText('') }} className="border-t border-gray-200 p-4 bg-white">
             <div className="flex items-center space-x-2">
               <div className="flex-1 relative">
                 <Input value={adminMsgText} onChange={(e)=>setAdminMsgText(e.target.value)} onFocus={()=>activeChatUserId && setTyping(true, activeChatUserId)} onBlur={()=>activeChatUserId && setTyping(false, activeChatUserId)} placeholder={activeChatUserId ? 'Type your message...' : 'Select a conversation'} />
               </div>
-              <Button type="submit" disabled={!activeChatUserId} className="shadow-lg hover:shadow-xl transition-all duration-200 bg-orange-500 text-white" size="icon"><Send className="h-4 w-4" /></Button>
+              <Button type="submit" disabled={!activeChatUserId} className="shadow-lg hover:shadow-xl transition-all duration-200 bg-[#F14D4C] text-white" size="icon"><Send className="h-4 w-4" /></Button>
             </div>
           </form>
         </div>
