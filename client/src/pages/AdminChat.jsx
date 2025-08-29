@@ -65,6 +65,11 @@ const AdminChat = () => {
     loadUsers()
   }, [fetchRecent])
 
+  // Refetch recent list whenever chatThreads change so ordering stays fresh
+  useEffect(() => {
+    fetchRecent((list) => setRecentChats(list))
+  }, [chatThreads, fetchRecent])
+
   useEffect(() => {
     if (activeChatUserId) fetchThread(activeChatUserId, undefined, { limit: 20 })
   }, [activeChatUserId, fetchThread])
@@ -84,16 +89,49 @@ const AdminChat = () => {
     )
   }
 
-  const messages = activeChatUserId ? (chatThreads[activeChatUserId] || []) : []
-
-  const mergedUsers = users.map(u => {
-    const rc = recentChats.find(rc => rc.userId === String(u._id))
-    return { userId: String(u._id), username: u.username, email: u.email, lastText: rc?.lastText || '', lastFrom: rc?.lastFrom || '', ts: rc?.ts || 0 }
-  }).filter(m => {
-    if (!userSearch) return true
-    const q = userSearch.toLowerCase()
-    return ((m.username || '').toLowerCase().includes(q) || (m.email || '').toLowerCase().includes(q) || (m.userId || '').toLowerCase().includes(q) || (m.lastText || '').toLowerCase().includes(q))
-  }).sort((a, b) => (b.ts || 0) - (a.ts || 0))
+  // Build sidebar list from the union of recentChats and users; prefer recentChats metadata for ordering
+  const recentMap = new Map(recentChats.map(rc => [String(rc.userId), rc]))
+  const unionList = []
+  // Include everyone from recent first
+  recentChats.forEach(rc => {
+    const uid = String(rc.userId)
+    const u = users.find(x => String(x._id) === uid)
+    unionList.push({
+      userId: uid,
+      username: u?.username || '',
+      email: u?.email || '',
+      lastText: rc?.lastText || '',
+      lastFrom: rc?.lastFrom || 'user',
+      ts: rc?.ts || 0,
+    })
+  })
+  // Include users with no recent entry
+  users.forEach(u => {
+    const uid = String(u._id)
+    if (!recentMap.has(uid)) {
+      unionList.push({
+        userId: uid,
+        username: u.username || '',
+        email: u.email || '',
+        lastText: '',
+        lastFrom: 'user',
+        ts: 0,
+      })
+    }
+  })
+  // Filter by search and sort by latest ts desc
+  const mergedUsers = unionList
+    .filter(m => {
+      if (!userSearch) return true
+      const q = userSearch.toLowerCase()
+      return (
+        (m.username || '').toLowerCase().includes(q) ||
+        (m.email || '').toLowerCase().includes(q) ||
+        (m.userId || '').toLowerCase().includes(q) ||
+        (m.lastText || '').toLowerCase().includes(q)
+      )
+    })
+    .sort((a, b) => (Number(b.ts) || 0) - (Number(a.ts) || 0))
 
   return (
     <div className="min-h-screen bg-[#f7f7f8]">
@@ -139,7 +177,7 @@ const AdminChat = () => {
                       <p className="text-sm font-semibold text-[#121212] truncate">{c.username || (c.email ? String(c.email).split('@')[0] : c.userId)}</p>
                       <span className="text-xs text-gray-500">{c.ts ? new Date(c.ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : ''}</span>
                     </div>
-                    <p className="text-sm text-gray-600 truncate">{c.lastFrom==='admin' ? 'You: ' : ''}{c.lastText || 'No messages yet'}</p>
+                    <p className="text-sm text-gray-600 truncate">{c.lastText || ''}</p>
                   </div>
                 </div>
               </div>
