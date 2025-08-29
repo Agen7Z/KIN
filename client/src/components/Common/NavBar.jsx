@@ -53,12 +53,12 @@ const NavBar = () => {
         {/* Right side icons */}
         <div className="flex items-center gap-3 sm:gap-4 lg:gap-6 text-[18px] sm:text-[20px]">
           {user && user.role !== 'admin' && (
-            <Link to="/chat" className="text-black hover:text-gray-700 transition-all duration-300 relative flex items-center" aria-label="Messages">
+            <Link to="/chat" className="text-blue-600 hover:text-blue-700 transition-all duration-300 relative flex items-center" aria-label="Messages">
               <HiOutlineChatAlt2 />
             </Link>
           )}
           {user && user.role !== 'admin' && (
-            <button onClick={() => setOpen(o => !o)} className="text-black hover:text-gray-700 transition-all duration-300 relative flex items-center" aria-label="Notifications">
+            <button onClick={() => setOpen(o => !o)} className="text-blue-600 hover:text-blue-700 transition-all duration-300 relative flex items-center" aria-label="Notifications">
               <HiOutlineBell />
               {unreadCount > 0 && (
                 <span className="absolute -top-1 -right-3 bg-blue-600 text-white rounded-full min-w-4 h-4 px-1 text-[10px] leading-4 flex items-center justify-center">

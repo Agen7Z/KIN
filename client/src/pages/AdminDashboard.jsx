@@ -1105,23 +1105,54 @@ const AdminDashboard = () => {
               />
             </div>
             <div className="max-h-[480px] overflow-y-auto divide-y">
-              {recentChats.length === 0 && (
-                <div className="p-4 text-sm text-gray-500">No conversations yet</div>
-              )}
-              {recentChats
-                .filter(c => !userSearch || c.userId.toLowerCase().includes(userSearch.toLowerCase()) || (c.lastText||'').toLowerCase().includes(userSearch.toLowerCase()))
-                .sort((a,b)=> (b.ts||0)-(a.ts||0))
-                .map((c) => (
-                <button
-                  key={c.userId}
-                  onClick={() => { setActiveChatUserId(c.userId); fetchThread(c.userId, undefined, { limit: 20 }) }}
-                  className={`w-full text-left p-4 hover:bg-gray-50 ${activeChatUserId === c.userId ? 'bg-blue-50' : ''}`}
-                >
-                  <div className="text-sm font-medium">{c.username || c.email || c.userId}</div>
-                  <div className="text-xs text-gray-500 truncate">{c.email}</div>
-                  <div className="text-xs text-gray-500 truncate">{c.lastFrom === 'admin' ? 'You: ' : ''}{c.lastText}</div>
-                </button>
-              ))}
+              {(() => {
+                // Merge all users with recent chat data so list is never empty
+                const recentMap = new Map(recentChats.map(rc => [rc.userId, rc]))
+                const merged = safeUsers.map(u => {
+                  const rc = recentMap.get(String(u._id))
+                  return {
+                    userId: String(u._id),
+                    username: u.username,
+                    email: u.email,
+                    lastText: rc?.lastText || '',
+                    lastFrom: rc?.lastFrom || '',
+                    ts: rc?.ts || 0,
+                  }
+                })
+                // Include any users who might not be in the safeUsers list but appear in recentChats
+                recentChats.forEach(rc => {
+                  if (!merged.find(m => m.userId === rc.userId)) {
+                    merged.push({ userId: rc.userId, username: rc.username, email: rc.email, lastText: rc.lastText, lastFrom: rc.lastFrom, ts: rc.ts })
+                  }
+                })
+                const filtered = merged.filter(m => {
+                  if (!userSearch) return true
+                  const q = userSearch.toLowerCase()
+                  return (
+                    (m.username || '').toLowerCase().includes(q) ||
+                    (m.email || '').toLowerCase().includes(q) ||
+                    (m.userId || '').toLowerCase().includes(q) ||
+                    (m.lastText || '').toLowerCase().includes(q)
+                  )
+                })
+                const sorted = filtered.sort((a,b) => (b.ts||0)-(a.ts||0))
+                if (sorted.length === 0) {
+                  return (<div className="p-4 text-sm text-gray-500">No users</div>)
+                }
+                return sorted.map((c) => (
+                  <button
+                    key={c.userId}
+                    onClick={() => { setActiveChatUserId(c.userId); fetchThread(c.userId, undefined, { limit: 20 }) }}
+                    className={`w-full text-left p-4 hover:bg-gray-50 ${activeChatUserId === c.userId ? 'bg-blue-50' : ''}`}
+                  >
+                    <div className="text-sm font-medium">{c.username || c.email || c.userId}</div>
+                    <div className="text-xs text-gray-500 truncate">{c.email}</div>
+                    {c.lastText && (
+                      <div className="text-xs text-gray-500 truncate">{c.lastFrom === 'admin' ? 'You: ' : ''}{c.lastText}</div>
+                    )}
+                  </button>
+                ))
+              })()}
             </div>
           </div>
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 md:col-span-2 flex flex-col">
