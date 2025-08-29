@@ -54,6 +54,18 @@ export const registerUser = async (req, res, next) => {
             },
         });
     } catch (error) {
+        // Handle duplicate key error (e.g., unique email/username)
+        if (error && (error.code === 11000 || error.name === 'MongoServerError')) {
+            const dupField = Object.keys(error.keyPattern || {})[0] || 'email'
+            return next(new AppError(`User with this ${dupField} already exists`, 409));
+        }
+        // Log details for debugging
+        console.error('registerUser error:', {
+            name: error?.name,
+            code: error?.code,
+            message: error?.message,
+            stack: process.env.NODE_ENV !== 'production' ? error?.stack : undefined,
+        });
         next(error);
     }
 };
