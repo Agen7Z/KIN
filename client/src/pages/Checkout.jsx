@@ -49,11 +49,21 @@ const Checkout = () => {
   const { show } = useToast()
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
-  const [address, setAddress] = useState({
-    fullName: user?.username || '',
-    province: '',
-    district: '',
-    mainAddress: '',
+  const [address, setAddress] = useState(() => {
+    // Load saved address if present
+    try {
+      const saved = localStorage.getItem('kin_saved_address')
+      if (saved) return JSON.parse(saved)
+    } catch {}
+    // Default fullName from Google/email username (before @) if available
+    const emailName = (user?.email || '').split('@')[0] || ''
+    const fallbackName = user?.username || emailName
+    return {
+      fullName: fallbackName,
+      province: '',
+      district: '',
+      mainAddress: '',
+    }
   })
   const [khaltiLoading, setKhaltiLoading] = useState(false)
   const [testMode, setTestMode] = useState(false)
@@ -101,6 +111,10 @@ const Checkout = () => {
     }
     try {
       setLoading(true)
+      // Persist address for next time (first successful validation/save)
+      try {
+        localStorage.setItem('kin_saved_address', JSON.stringify(address))
+      } catch {}
       
       const token = localStorage.getItem('kin_auth') ? JSON.parse(localStorage.getItem('kin_auth')).token : null
       

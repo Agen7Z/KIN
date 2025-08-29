@@ -24,16 +24,10 @@ export const CartProvider = ({ children }) => {
     setItems(prevItems => {
       const existingItem = prevItems.find(item => item._id === product._id)
       if (existingItem) {
-        const updated = prevItems.map(item =>
-          item._id === product._id
-            ? { ...item, quantity: item.quantity + quantity }
-            : item
-        )
-        // Toast for increased quantity
-        toast?.success?.(`${product.name || 'Item'} quantity updated`, { duration: 2500 })
-        // Open cart drawer to show update
+        // Do NOT auto-increase quantity on repeated add; just inform and open cart
+        toast?.info?.(`${product.name || 'Item'} is already in your cart`, { duration: 2500 })
         setIsOpen(true)
-        return updated
+        return prevItems
       } else {
         const next = [...prevItems, { ...product, quantity }]
         // Toast for added item
