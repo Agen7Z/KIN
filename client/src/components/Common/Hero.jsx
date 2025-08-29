@@ -3,10 +3,10 @@ import { Link } from "react-router-dom";
 
 const Hero = () => {
   return (
-    <section className="relative w-full min-h-screen flex flex-col items-center justify-center bg-white">
+    <section className="relative w-full h-screen flex items-center justify-center bg-white">
       
-      {/* Top Section - Men */}
-      <div className="relative w-full h-1/2 overflow-hidden group">
+      {/* Left Section - Men (Desktop) / Top Section (Mobile) */}
+      <div className="absolute left-0 top-0 w-full md:w-1/2 h-1/2 md:h-full overflow-hidden group">
         <img
           src="https://images.pexels.com/photos/31867225/pexels-photo-31867225.jpeg"
           alt="Men"
@@ -26,8 +26,8 @@ const Hero = () => {
         </div>
       </div>
 
-      {/* Bottom Section - Women */}
-      <div className="relative w-full h-1/2 overflow-hidden group">
+      {/* Right Section - Women (Desktop) / Bottom Section (Mobile) */}
+      <div className="absolute right-0 bottom-0 md:top-0 w-full md:w-1/2 h-1/2 md:h-full overflow-hidden group">
         <img
           src="https://images.pexels.com/photos/19064121/pexels-photo-19064121.jpeg"
           alt="Women"
@@ -47,8 +47,8 @@ const Hero = () => {
         </div>
       </div>
 
-      {/* Centered Brand Text - Overlay on both sections */}
-      <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
+      {/* Centered Brand Text - Hidden on mobile, shown on desktop */}
+      <div className="hidden md:flex absolute inset-0 z-20 items-center justify-center pointer-events-none">
         <div className="text-center">
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-serif text-white drop-shadow-lg uppercase tracking-widest">
             KINN

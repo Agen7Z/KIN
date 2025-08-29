@@ -21,10 +21,10 @@ const NavBar = () => {
         </div>
 
         {/* Right side icons */}
-        <div className="flex items-center gap-4 sm:gap-6 text-[18px] sm:text-[20px]">
+        <div className="flex items-center gap-3 sm:gap-4 lg:gap-6 text-[18px] sm:text-[20px]">
           <Link
             to={user ? (user.role === 'admin' ? '/admin' : '/profile') : '/login'}
-            className="text-black hover:text-gray-700 transition-all duration-300"
+            className="text-black hover:text-gray-700 transition-all duration-300 flex items-center"
             aria-label="Account"
           >
             {user ? (
@@ -36,7 +36,7 @@ const NavBar = () => {
             )}
           </Link>
           {user?.role !== 'admin' && (
-            <button onClick={toggle} className="text-black hover:text-gray-700 transition-all duration-300 relative">
+            <button onClick={toggle} className="text-black hover:text-gray-700 transition-all duration-300 relative flex items-center">
               <HiOutlineShoppingCart />
               {count > 0 && (
                 <span className="absolute -top-1 -right-3 bg-red-500 text-white rounded-full min-w-4 h-4 px-1 text-[10px] leading-4 flex items-center justify-center">
