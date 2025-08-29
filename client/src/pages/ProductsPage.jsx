@@ -5,6 +5,49 @@ import ProductCard from '../components/Products/ProductCard'
 import { useCart } from '../hooks/useCart'
 import { useAuth } from '../hooks/useAuth'
 import apiFetch from '../utils/api'
+import loadingImg from '../assets/loading.png'
+
+// Branded loader with background image and animated K I N N letters
+const KinnLoader = ({ message = 'Loading products...' }) => {
+  const [activeIdx, setActiveIdx] = React.useState(0)
+  const letters = ['K', 'I', 'N', 'N']
+
+  React.useEffect(() => {
+    const id = setInterval(() => {
+      setActiveIdx((i) => (i + 1) % letters.length)
+    }, 300)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <div className="relative w-full">
+      <div
+        className="absolute inset-0 opacity-10 bg-center bg-contain bg-no-repeat"
+        style={{ backgroundImage: `url(${loadingImg})` }}
+      />
+      <div className="relative flex flex-col items-center justify-center">
+        <div className="flex items-center gap-4 mb-4 select-none">
+          {letters.map((ch, idx) => (
+            <span
+              key={idx}
+              className={`text-4xl md:text-5xl font-serif tracking-[0.35em] ${
+                idx === activeIdx ? 'text-gray-900' : 'text-gray-400'
+              } ${idx === activeIdx ? 'scale-110' : 'scale-100'}`}
+              style={{ transition: 'all 200ms ease' }}
+            >
+              {ch}
+            </span>
+          ))}
+        </div>
+        <div className="relative h-8 w-8 mb-3">
+          <div className="absolute inset-0 rounded-full border-2 border-gray-200" />
+          <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-gray-900 animate-spin" />
+        </div>
+        <p className="text-gray-600 text-sm md:text-base">{message}</p>
+      </div>
+    </div>
+  )
+}
 
 const useProducts = (category, gender, page, limit = 12) => {
   const [data, setData] = useState([])
@@ -98,6 +141,7 @@ const ProductsPage = () => {
   const [selectedGender, setSelectedGender] = useState(getGenderFromPath())
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedCategory, setSelectedCategory] = useState(category || 'all')
+  const [isPageLoading, setIsPageLoading] = useState(false)
   
   const { data: products, loading: productsLoading, totalProducts, totalPages } = useProducts(selectedCategory, selectedGender, currentPage, 12)
   const trendingProducts = useTrending()
@@ -112,6 +156,13 @@ const ProductsPage = () => {
     setSelectedCategory(category || 'all')
     setCurrentPage(1) // Reset to first page when category changes
   }, [category])
+
+  // Reset page loading when products are loaded
+  useEffect(() => {
+    if (!productsLoading) {
+      setIsPageLoading(false)
+    }
+  }, [productsLoading])
   
   const toggleArrayValue = (arr, value) => (
     arr.includes(value) ? arr.filter((v) => v !== value) : [...arr, value]
@@ -215,6 +266,7 @@ const ProductsPage = () => {
   
   // Pagination functions
   const goToPage = (pageNum) => {
+    setIsPageLoading(true)
     setCurrentPage(pageNum)
     // Use smooth scroll for better UX
     window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -268,6 +320,37 @@ const ProductsPage = () => {
     return pages
   }
   
+  // Show full page loading screen when products are loading
+  if (productsLoading) {
+    return (
+      <div className="min-h-screen bg-white">
+        <NavBar />
+        
+        {/* Premium Hero Section */}
+        <div className="pt-20 pb-12 bg-gradient-to-b from-gray-50 to-white">
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="text-center py-12">
+              <div className="inline-block">
+                <h1 className="text-5xl md:text-7xl font-serif text-gray-900 uppercase tracking-[0.2em] mb-4">
+                  {getPageTitle()}
+                </h1>
+                <div className="w-24 h-px bg-gradient-to-r from-transparent via-gray-900 to-transparent mx-auto mb-6"></div>
+                <p className="text-lg text-gray-600 font-light tracking-wide">
+                  Curated collection for the modern {getPageTitle().toLowerCase()}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Full Page Loading Screen */}
+        <div className="flex items-center justify-center min-h-[60vh] px-6">
+          <KinnLoader message="Discovering the perfect pieces for you..." />
+        </div>
+      </div>
+    )
+  }
+
   return (
     <>
     <div className="min-h-screen bg-white">
@@ -478,35 +561,42 @@ const ProductsPage = () => {
               </div>
             </div>
 
-            {/* Premium Products Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {sortedProducts.map((product) => (
-                <ProductCard
-                  key={product._id}
-                  product={product}
-                  rating={product.rating}
-                  reviews={product.reviews}
-                  onQuickView={() => openQuickView(product)}
-                  onAddToCart={() => {
-                    if (!user) {
-                      window.location.href = '/login'
-                      return
-                    }
-                    if (user.role === 'admin') {
-                      return
-                    }
-                    addItem(product, 1)
-                  }}
-                />
-              ))}
-              
-              {/* Loading state */}
-              {productsLoading && (
-                <div className="col-span-full text-center py-16">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
-                  <p className="text-gray-500 text-lg">Loading products...</p>
-                </div>
-              )}
+                         {/* Premium Products Grid */}
+             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+               {sortedProducts.map((product) => (
+                 <ProductCard
+                   key={product._id}
+                   product={product}
+                   rating={product.rating}
+                   reviews={product.reviews}
+                   onQuickView={() => openQuickView(product)}
+                   onAddToCart={() => {
+                     if (!user) {
+                       window.location.href = '/login'
+                       return
+                     }
+                     if (user.role === 'admin') {
+                       return
+                     }
+                     addItem(product, 1)
+                   }}
+                 />
+               ))}
+               
+               {/* Page Loading Overlay */}
+               {isPageLoading && (
+                 <div className="col-span-full text-center py-16">
+                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
+                   <p className="text-gray-500 text-lg">Loading next page...</p>
+                 </div>
+               )}
+               
+               {/* Initial Loading state with branded image */}
+               {productsLoading && !isPageLoading && (
+                 <div className="col-span-full text-center py-16 px-6">
+                   <KinnLoader message="Loading products..." />
+                 </div>
+               )}
               
               {/* If no products found */}
               {!productsLoading && sortedProducts.length === 0 && (
