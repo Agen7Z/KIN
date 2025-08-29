@@ -13,7 +13,7 @@ const FloatingChatButton = () => {
   return (
     <Link
       to="/chat"
-      className="fixed bottom-6 right-6 z-50 group"
+      className="fixed bottom-6 left-6 z-50 group"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -33,11 +33,11 @@ const FloatingChatButton = () => {
       </div>
       
       {/* Tooltip */}
-      <div className={`absolute bottom-20 right-0 bg-gray-900 text-white px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transform transition-all duration-300 ${
+      <div className={`absolute bottom-20 left-0 bg-gray-900 text-white px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transform transition-all duration-300 ${
         isHovered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
       }`}>
         Chat with Admin
-        <div className="absolute top-full right-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+        <div className="absolute top-full left-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
       </div>
     </Link>
   )

@@ -14,13 +14,13 @@ const Button = ({ children, variant = 'default', size = 'default', className = '
   )
 }
 const Input = ({ className = '', ...props }) => (
-  <input className={`flex h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-300 ${className}`} {...props} />
+  <input className={`flex h-10 w-full rounded-lg border-2 border-gray-300 bg-[#f9fafb] px-3 py-2 text-sm placeholder:text-gray-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-300 ${className}`} {...props} />
 )
 const Avatar = ({ children, className = '' }) => (
   <div className={`relative flex h-10 w-10 shrink-0 overflow-hidden rounded-full ${className}`}>{children}</div>
 )
 const AvatarFallback = ({ children, className = '' }) => (
-  <div className={`flex h-full w-full items-center justify-center rounded-full bg-gray-200 ${className}`}>{children}</div>
+  <div className={`flex h-full w-full items-center justify-center rounded-full bg-[#121212] text-white ${className}`}>{children}</div>
 )
 
 const Chat = () => {
@@ -77,8 +77,8 @@ const Chat = () => {
   }, [messages.length])
 
   if (!user) return (
-    <div className="min-h-screen flex items-center justify-center bg-white">
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 text-center max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-[#f7f7f8]">
+      <div className="bg-white rounded-xl shadow-lg border-2 border-gray-200 p-8 text-center max-w-md">
         <div className="text-red-500 mb-4">
           <MessageSquare className="w-16 h-16 mx-auto" />
         </div>
@@ -89,30 +89,30 @@ const Chat = () => {
   )
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[#f7f7f8]">
       <NavBar />
       <div className="pt-20 h-screen flex">
         {/* Left Sidebar - single Admin */}
-        <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
-          <div className="p-6 border-b border-gray-200">
+        <div className="w-80 bg-white border-r-2 border-gray-200 flex flex-col shadow-sm">
+          <div className="p-6 border-b-2 border-gray-200">
             <div className="flex items-center justify-between mb-4">
               <div className="text-xl font-semibold text-[#121212]">Messages</div>
               <Button variant="ghost" size="icon" className="text-[#121212] hover:bg-gray-100"><MoreVertical className="h-5 w-5" /></Button>
             </div>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input placeholder="Search..." className="pl-10 bg-white" disabled />
+              <Input placeholder="Search..." className="pl-10" disabled />
             </div>
           </div>
           <div className="flex-1 overflow-y-auto">
-            <div className={`p-4 bg-gray-100 border-r-2 border-orange-500`}>
+            <div className={`p-4 bg-[#f3f4f6] border-r-4 border-[#F14D4C]`}>
               <div className="flex items-center space-x-3">
                 <Avatar className="h-12 w-12">
-                  <AvatarFallback className="bg-[#121212] text-white">AD</AvatarFallback>
+                  <AvatarFallback>AD</AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium text-[#121212] truncate">admin</p>
+                    <p className="text-sm font-semibold text-[#121212] truncate">admin</p>
                     <span className="text-xs text-gray-500">Now</span>
                   </div>
                   <p className="text-sm text-gray-600 truncate">Premium Support</p>
@@ -124,10 +124,10 @@ const Chat = () => {
 
         {/* Main Chat Area */}
         <div className="flex-1 flex flex-col">
-          <div className="bg-white border-b border-gray-200 p-4 flex items-center justify-between">
+          <div className="bg-white border-b-2 border-gray-200 p-4 flex items-center justify-between shadow-sm">
             <div className="flex items-center space-x-3">
               <Avatar className="h-10 w-10">
-                <AvatarFallback className="bg-[#121212] text-white">AD</AvatarFallback>
+                <AvatarFallback>AD</AvatarFallback>
               </Avatar>
               <div>
                 <div className="font-semibold text-[#121212]">admin</div>
@@ -140,14 +140,14 @@ const Chat = () => {
             <div className="flex items-center space-x-2"></div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-white pb-24" ref={listRef}>
+          <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-[#f9fafb] pb-28" ref={listRef}>
             {loading && (
               <div className="text-center text-sm text-gray-500">Loading...</div>
             )}
             
             {messages.length === 0 && !loading && (
               <div className="text-center py-12">
-                <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center border border-gray-200">
+                <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center border-2 border-gray-300 shadow-sm">
                   <MessageSquare className="w-8 h-8 text-gray-500" />
                 </div>
                 <div className="text-lg font-semibold text-[#121212] mb-2">Start a conversation</div>
@@ -157,7 +157,7 @@ const Chat = () => {
 
             {messages.map((m, idx) => (
               <div key={idx} className={`flex ${m.from === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`p-4 rounded-lg shadow-sm transition-shadow max-w-xs lg:max-w-md ${m.from==='user' ? 'bg-[#F14D4C] text-white' : 'bg-gray-100 text-[#121212]'}`}>
+                <div className={`px-5 py-3 rounded-2xl shadow-md transition-shadow max-w-[70%] border-2 ${m.from==='user' ? 'bg-[#F14D4C] text-white border-[#e03d3d]' : 'bg-white text-[#121212] border-gray-300'}`}>
                   <div className="text-sm leading-relaxed">{m.text}</div>
                 </div>
               </div>
@@ -165,7 +165,7 @@ const Chat = () => {
 
             {typingState[myUserId]?.from === 'admin' && typingState[myUserId]?.isTyping && (
               <div className="flex justify-start">
-                <div className="bg-gray-100 rounded-lg px-4 py-3">
+                <div className="bg-white border-2 border-gray-300 rounded-2xl px-5 py-3 shadow-md">
                   <div className="flex space-x-1">
                     <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
                     <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
@@ -176,7 +176,7 @@ const Chat = () => {
             )}
           </div>
 
-          <form onSubmit={(e) => { e.preventDefault(); const t = text.trim(); if (!t) return; sendUserMessage(t); setText('') }} className="border-t border-gray-200 p-4 bg-white mb-6">
+          <form onSubmit={(e) => { e.preventDefault(); const t = text.trim(); if (!t) return; sendUserMessage(t); setText('') }} className="border-t-2 border-gray-200 p-4 bg-white mb-8 shadow-sm">
             <div className="flex items-center space-x-2">
               <div className="flex-1 relative">
                 <Input 
@@ -187,7 +187,7 @@ const Chat = () => {
                   placeholder="Type your message..." 
                 />
               </div>
-              <Button type="submit" disabled={!text.trim()} className="shadow-lg hover:shadow-xl transition-all duration-200" size="icon">
+              <Button type="submit" disabled={!text.trim()} className="shadow-md hover:shadow-lg transition-all duration-200" size="icon">
                 <Send className="h-4 w-4" />
               </Button>
             </div>
