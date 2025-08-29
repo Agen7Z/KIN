@@ -5,8 +5,8 @@ import User from "../models/user.model.js";
 import AppError from "../utils/appError.js";
 import { sendEmailViaEmailJS } from "../utils/email.js";
 
-const signToken = (userId) => {
-    return jwt.sign({ id: userId }, process.env.JWT_SECRET, {
+const signToken = (userId, role) => {
+    return jwt.sign({ id: userId, role }, process.env.JWT_SECRET, {
         expiresIn: process.env.JWT_EXPIRES_IN || "7d",
     });
 };
@@ -58,7 +58,7 @@ export const registerUser = async (req, res, next) => {
             // non-blocking
         }
 
-        const token = signToken(user._id);
+        const token = signToken(user._id, user.role);
 
         res.status(201).json({
             status: "success",
@@ -108,7 +108,7 @@ export const loginUser = async (req, res, next) => {
             return next(new AppError("Invalid credentials", 401));
         }
         
-        const token = signToken(user._id);
+        const token = signToken(user._id, user.role);
         
         res.status(200).json({
             status: "success",
@@ -195,7 +195,7 @@ export const googleAuth = async (req, res, next) => {
             }
         }
 
-        const token = signToken(user._id);
+        const token = signToken(user._id, user.role);
         // Fire-and-forget welcome email for first-time Google sign-in
         if (isNewUser) {
             try {

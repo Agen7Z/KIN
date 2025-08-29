@@ -211,8 +211,11 @@ io.on('connection', (socket) => {
     if (token) {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       authedUser = { id: decoded.id, role: decoded.role };
+      console.log('Socket auth decoded:', { id: decoded.id, role: decoded.role, hasRole: !!decoded.role });
     }
-  } catch {}
+  } catch (error) {
+    console.error('Socket auth error:', error.message);
+  }
 
   if (authedUser?.id) {
     socket.data.userId = authedUser.id;
