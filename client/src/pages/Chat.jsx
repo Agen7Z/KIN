@@ -16,25 +16,30 @@ const Chat = () => {
   const messages = useMemo(() => chatThreads[myUserId] || [], [chatThreads, myUserId])
 
   useEffect(() => {
-    if (!user) return
+    if (!user || !myUserId) return
     setLoading(true)
     fetchThread(myUserId, (thread) => {
       setLoading(false)
       const firstTs = Array.isArray(thread) && thread.length ? thread[0].ts : null
       setOldestLoadedTs(firstTs)
     }, { limit: 20 })
-  }, [user])
+  }, [user, myUserId])
 
   // Infinite scroll up: load older messages when reaching top
   useEffect(() => {
     const container = listRef.current
-    if (!container) return
+    if (!container || !oldestLoadedTs) return
     const onScroll = () => {
       if (container.scrollTop <= 0 && oldestLoadedTs) {
         const before = oldestLoadedTs
         fetchThread(myUserId, (older) => {
-          const firstTs = Array.isArray(older) && older.length ? older[0].ts : oldestLoadedTs
-          setOldestLoadedTs(firstTs)
+          if (Array.isArray(older) && older.length > 0) {
+            const firstTs = older[0].ts
+            setOldestLoadedTs(firstTs)
+          } else {
+            // No more messages to load
+            setOldestLoadedTs(null)
+          }
         }, { beforeTs: before, limit: 20 })
       }
     }

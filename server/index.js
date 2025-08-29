@@ -203,7 +203,7 @@ const pushMessage = (userId, message) => {
   conversations.get(userId).push(message);
 };
 
-io.on('connection', (socket) => {
+io.on('connection', async (socket) => {
   // Lightweight auth using JWT provided via handshake auth
   let authedUser = null;
   try {
@@ -220,6 +220,21 @@ io.on('connection', (socket) => {
   if (authedUser?.id) {
     socket.data.userId = authedUser.id;
     socket.data.role = authedUser.role || 'user';
+    
+    // Debug: Check user role in database if JWT role is missing
+    if (!authedUser.role) {
+      try {
+        const User = (await import('./models/user.model.js')).default;
+        const dbUser = await User.findById(authedUser.id).select('role').lean();
+        if (dbUser && dbUser.role) {
+          socket.data.role = dbUser.role;
+          console.log('Fixed role from database:', { userId: authedUser.id, role: dbUser.role });
+        }
+      } catch (error) {
+        console.error('Failed to fetch user role from DB:', error.message);
+      }
+    }
+    
     socket.join(`user:${authedUser.id}`);
     addUserSocket(authedUser.id, socket.id);
     if (socket.data.role === 'admin') {
