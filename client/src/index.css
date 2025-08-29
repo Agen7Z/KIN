@@ -97,7 +97,6 @@ body {
     -webkit-box-shadow: none !important;
     -moz-box-shadow: none !important;
   }
-  
 }
 
 /* Custom animations for chat */
@@ -115,12 +114,12 @@ body {
 .animate-fadeIn {
   animation: fadeIn 0.3s ease-out;
 }
-  /* Additional touch feedback removal */
-  a:active, button:active, input:active, textarea:active, select:active {
-    -webkit-tap-highlight-color: transparent !important;
-    -webkit-touch-callout: none !important;
-    -webkit-touch-manipulation: manipulation !important;
-  }
+
+/* Additional touch feedback removal */
+a:active, button:active, input:active, textarea:active, select:active {
+  -webkit-tap-highlight-color: transparent !important;
+  -webkit-touch-callout: none !important;
+  -webkit-touch-manipulation: manipulation !important;
 }
 
 /* Better focus states for accessibility */
