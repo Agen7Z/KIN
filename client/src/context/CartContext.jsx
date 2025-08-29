@@ -1,8 +1,10 @@
 import React, { createContext, useState, useEffect } from 'react'
+import { ToastContext } from './ToastContext.jsx'
 
 const CartContext = createContext()
 
 export const CartProvider = ({ children }) => {
+  const toast = React.useContext(ToastContext)
   const STORAGE_KEY = 'kin_cart'
   const [items, setItems] = useState(() => {
     try {
@@ -22,13 +24,23 @@ export const CartProvider = ({ children }) => {
     setItems(prevItems => {
       const existingItem = prevItems.find(item => item._id === product._id)
       if (existingItem) {
-        return prevItems.map(item =>
+        const updated = prevItems.map(item =>
           item._id === product._id
             ? { ...item, quantity: item.quantity + quantity }
             : item
         )
+        // Toast for increased quantity
+        toast?.success?.(`${product.name || 'Item'} quantity updated`, { duration: 2500 })
+        // Open cart drawer to show update
+        setIsOpen(true)
+        return updated
       } else {
-        return [...prevItems, { ...product, quantity }]
+        const next = [...prevItems, { ...product, quantity }]
+        // Toast for added item
+        toast?.success?.(`${product.name || 'Item'} added to cart`, { duration: 2500 })
+        // Open cart drawer to show item added
+        setIsOpen(true)
+        return next
       }
     })
   }

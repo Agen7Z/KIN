@@ -6,7 +6,7 @@ const Hero = () => {
     <section className="relative w-full h-screen flex items-center justify-center bg-white">
       
       {/* Left Section - Men (Desktop) / Top Section (Mobile) */}
-      <div className="absolute left-0 top-0 w-full md:w-1/2 h-1/2 md:h-full overflow-hidden group">
+      <Link to="/men" className="absolute left-0 top-0 w-full md:w-1/2 h-1/2 md:h-full overflow-hidden group block">
         <img
           src="https://images.pexels.com/photos/31867225/pexels-photo-31867225.jpeg"
           alt="Men"
@@ -20,14 +20,14 @@ const Hero = () => {
           <span className="block text-white text-2xl sm:text-3xl font-bold uppercase tracking-widest group-hover:text-white transition-colors duration-300 drop-shadow-lg">
             Men
           </span>
-          <Link to="/men" className="mt-12 px-4 sm:px-6 py-2 bg-black text-white font-medium uppercase tracking-wide rounded-lg shadow hover:bg-white hover:text-black transition-all duration-300 hover:shadow-lg text-sm sm:text-base">
-            Try Wears
-          </Link>
+          <span className="mt-12 inline-block px-4 sm:px-6 py-2 bg-black text-white font-medium uppercase tracking-wide rounded-lg shadow group-hover:bg-white group-hover:text-black transition-all duration-300 text-sm sm:text-base">
+            Explore Men
+          </span>
         </div>
-      </div>
+      </Link>
 
       {/* Right Section - Women (Desktop) / Bottom Section (Mobile) */}
-      <div className="absolute right-0 bottom-0 md:top-0 w-full md:w-1/2 h-1/2 md:h-full overflow-hidden group">
+      <Link to="/women" className="absolute right-0 bottom-0 md:top-0 w-full md:w-1/2 h-1/2 md:h-full overflow-hidden group block">
         <img
           src="https://images.pexels.com/photos/19064121/pexels-photo-19064121.jpeg"
           alt="Women"
@@ -41,11 +41,11 @@ const Hero = () => {
           <span className="block text-white text-2xl sm:text-3xl font-bold uppercase tracking-widest group-hover:text-white transition-colors duration-300 drop-shadow-lg">
             Women
           </span>
-          <Link to="/women" className="mt-12 px-4 sm:px-6 py-2 bg-red-500 text-white font-medium uppercase tracking-wide rounded-lg shadow hover:bg-white hover:text-black transition-all duration-300 hover:shadow-lg text-sm sm:text-base">
-            Try Wears
-          </Link>
+          <span className="mt-12 inline-block px-4 sm:px-6 py-2 bg-red-500 text-white font-medium uppercase tracking-wide rounded-lg shadow group-hover:bg-white group-hover:text-black transition-all duration-300 text-sm sm:text-base">
+            Explore Women
+          </span>
         </div>
-      </div>
+      </Link>
 
       {/* Centered Brand Text - Hidden on mobile, shown on desktop */}
       <div className="hidden md:flex absolute inset-0 z-20 items-center justify-center pointer-events-none">
