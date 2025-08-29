@@ -295,7 +295,12 @@ io.on('connection', (socket) => {
     const toUserId = String(payload.toUserId);
     const msg = { from: 'admin', text: String(payload.text).slice(0, 1000), ts: Date.now() };
     pushMessage(toUserId, msg);
-    try { await Message.create({ userId: toUserId, from: 'admin', text: msg.text }) } catch {}
+    try { 
+      const savedMsg = await Message.create({ userId: toUserId, from: 'admin', text: msg.text });
+      console.log('Admin message saved:', { toUserId, text: msg.text, msgId: savedMsg._id });
+    } catch (error) {
+      console.error('Failed to save admin message:', error);
+    }
     io.to(`user:${toUserId}`).emit('chat:message', { userId: toUserId, ...msg });
     io.to(`user:${toUserId}`).emit('chat:notification', { text: msg.text });
     // Echo back to all admins to update their UI

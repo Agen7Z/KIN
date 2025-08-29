@@ -59,10 +59,15 @@ export const SocketProvider = ({ children }) => {
     // Chat: incoming message (both user/admin)
     socket.on('chat:message', (payload) => {
       if (!payload?.userId || !payload?.text) return
+      // Update chatThreads for the specific userId
       setChatThreads((prev) => {
         const next = { ...prev }
         const list = next[payload.userId] ? [...next[payload.userId]] : []
-        list.push({ from: payload.from, text: payload.text, ts: payload.ts })
+        // Check if message already exists to avoid duplicates
+        const exists = list.some(m => m.text === payload.text && m.ts === payload.ts)
+        if (!exists) {
+          list.push({ from: payload.from, text: payload.text, ts: payload.ts })
+        }
         next[payload.userId] = list
         return next
       })
@@ -117,13 +122,6 @@ export const SocketProvider = ({ children }) => {
     const socket = socketRef.current
     if (!socket || !text?.trim() || !toUserId) return
     socket.emit('chat:admin_message', { toUserId, text })
-    setChatThreads((prev) => {
-      const next = { ...prev }
-      const list = next[toUserId] ? [...next[toUserId]] : []
-      list.push({ from: 'admin', text, ts: Date.now() })
-      next[toUserId] = list
-      return next
-    })
   }
 
   // Emit typing indicator
