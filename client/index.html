@@ -4,9 +4,17 @@
     <meta charset="UTF-8" />
     <!-- dont make logo rounded-->
     
-    <link rel="icon" type="image/svg+xml" href="/src/assets/logo.png"   />
+    <link rel="icon" type="image/png" href="/src/assets/logo.png" sizes="32x32" />
+    <link rel="icon" type="image/png" href="/src/assets/logo.png" sizes="16x16" />
+    <link rel="apple-touch-icon" href="/src/assets/logo.png" />
     <style>
       @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap');
+      
+      /* Ensure favicon displays as perfect square/circle */
+      link[rel="icon"] {
+        border-radius: 0 !important;
+        object-fit: contain !important;
+      }
     </style>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>KINN - Fashion Store</title>
