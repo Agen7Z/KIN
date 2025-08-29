@@ -62,13 +62,13 @@ const ProductDetail = () => {
 
       <main className="pt-20">
         <div className="grid grid-cols-1 lg:grid-cols-2 min-h-screen">
-          {/* Left: Full-height Product Image - Fixed, No Scroll */}
-          <div className="relative lg:fixed lg:left-0 lg:top-0 lg:w-1/2 lg:h-screen lg:overflow-hidden">
+          {/* Left: Full-height Product Image - No Scroll */}
+          <div className="relative lg:h-screen lg:overflow-hidden">
             <ProductMedia images={product.images} image={product.image} name={product.name} />
           </div>
 
-          {/* Right: Product Details - With left margin to account for fixed image */}
-          <div className="lg:ml-[50%] px-8 py-12 lg:py-20 overflow-y-auto">
+          {/* Right: Product Details */}
+          <div className="px-8 py-12 lg:py-20 overflow-y-auto">
             <div className="max-w-lg">
               <p className="text-[10px] uppercase tracking-[0.2em] text-gray-500">{product.category}</p>
               <h1 className="mt-2 text-3xl md:text-4xl font-semibold text-gray-900 tracking-tight">{product.name}</h1>
