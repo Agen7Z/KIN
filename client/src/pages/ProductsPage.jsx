@@ -5,42 +5,7 @@ import ProductCard from '../components/Products/ProductCard'
 import { useCart } from '../hooks/useCart'
 import { useAuth } from '../hooks/useAuth'
 import apiFetch from '../utils/api'
-
-// Branded loader with animated K I N N letters (no image)
-const KinnLoader = ({ message = 'Loading products...' }) => {
-  const [activeIdx, setActiveIdx] = React.useState(0)
-  const letters = ['K', 'I', 'N', 'N']
-
-  React.useEffect(() => {
-    const id = setInterval(() => {
-      setActiveIdx((i) => (i + 1) % letters.length)
-    }, 300)
-    return () => clearInterval(id)
-  }, [])
-
-  return (
-    <div className="relative w-full flex flex-col items-center justify-center">
-      <div className="flex items-center gap-4 mb-4 select-none">
-        {letters.map((ch, idx) => (
-          <span
-            key={idx}
-            className={`text-4xl md:text-5xl font-serif tracking-[0.35em] ${
-              idx === activeIdx ? 'text-gray-900' : 'text-gray-400'
-            } ${idx === activeIdx ? 'scale-110' : 'scale-100'}`}
-            style={{ transition: 'all 200ms ease' }}
-          >
-            {ch}
-          </span>
-        ))}
-      </div>
-      <div className="relative h-8 w-8 mb-3">
-        <div className="absolute inset-0 rounded-full border-2 border-gray-200" />
-        <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-gray-900 animate-spin" />
-      </div>
-      <p className="text-gray-600 text-sm md:text-base">{message}</p>
-    </div>
-  )
-}
+import KinnLoader from '../components/Common/KinnLoader.jsx'
 
 const useProducts = (category, gender, page, limit = 12) => {
   const [data, setData] = useState([])
@@ -135,7 +100,6 @@ const ProductsPage = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedCategory, setSelectedCategory] = useState(category || 'all')
   const [isPageLoading, setIsPageLoading] = useState(false)
-  const [initialGate, setInitialGate] = useState(true)
   
   const { data: products, loading: productsLoading, totalProducts, totalPages } = useProducts(selectedCategory, selectedGender, currentPage, 12)
   const trendingProducts = useTrending()
@@ -144,12 +108,6 @@ const ProductsPage = () => {
   useEffect(() => {
     setSelectedGender(getGenderFromPath())
   }, [getGenderFromPath])
-  
-  // Initial full-screen loading gate (2s) on mount/refresh
-  useEffect(() => {
-    const id = setTimeout(() => setInitialGate(false), 2000)
-    return () => clearTimeout(id)
-  }, [])
   
   // Update selectedCategory when URL changes
   useEffect(() => {
@@ -321,7 +279,7 @@ const ProductsPage = () => {
   }
   
   // Show full page loading screen when products are loading
-  if (initialGate || productsLoading) {
+  if (productsLoading) {
     return (
       <div className="min-h-screen bg-white">
         <NavBar />
@@ -345,7 +303,7 @@ const ProductsPage = () => {
 
         {/* Full Page Loading Screen */}
         <div className="flex items-center justify-center min-h-[60vh] px-6">
-          <KinnLoader message={initialGate ? 'Preparing your collection...' : 'Discovering the perfect pieces for you...'} />
+          <KinnLoader message={'Discovering the perfect pieces for you...'} />
         </div>
       </div>
     )

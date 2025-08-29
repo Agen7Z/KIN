@@ -5,6 +5,7 @@ import { CartProvider } from './context/CartContext.jsx'
 import { ToastProvider } from './context/ToastContext.jsx'
 import { useAuth } from './hooks/useAuth.js'
 import ScrollToTop from './components/Common/ScrollToTop.jsx'
+import KinnLoader from './components/Common/KinnLoader.jsx'
 
 import Home from './pages/Home'
 import ProductsPage from './pages/ProductsPage'
@@ -40,12 +41,26 @@ const ProtectedRoute = ({ children, requiredRole = null }) => {
 }
 
 const App = () => {
+  const [initialGate, setInitialGate] = React.useState(true)
+
+  React.useEffect(() => {
+    const id = setTimeout(() => setInitialGate(false), 2000)
+    return () => clearTimeout(id)
+  }, [])
+
   return (
     <BrowserRouter>
       <ScrollToTop />
       <AuthProvider>
         <CartProvider>
           <ToastProvider>
+          {/* Global initial overlay */}
+          {initialGate && (
+            <div className="fixed inset-0 z-[1000] bg-white flex items-center justify-center px-6">
+              <KinnLoader message="Preparing your collection..." />
+            </div>
+          )}
+
           <Routes>
             <Route path='/' element={<Home />} />
             <Route path='/products/:category' element={<ProductsPage />} />
