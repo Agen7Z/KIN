@@ -1,9 +1,29 @@
-import React, { useEffect, useState, useCallback } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, Search, Send, Users, MessageSquare } from 'lucide-react'
+import { ArrowLeft, Search, Send, Users, MessageSquare, MoreVertical } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { useSocket } from '../context/SocketContext.jsx'
 import apiFetch from '../utils/api'
+
+// Inline UI primitives inspired by the premium UI
+const Button = ({ children, variant = 'default', size = 'default', className = '', ...props }) => {
+  const base = 'inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50'
+  const variants = { default: 'bg-orange-500 text-white hover:bg-orange-600', ghost: 'hover:bg-gray-100 text-gray-800' }
+  const sizes = { default: 'h-10 px-4 py-2', icon: 'h-10 w-10' }
+  return (
+    <button className={`${base} ${variants[variant]} ${sizes[size]} ${className}`} {...props}>{children}</button>
+  )
+}
+const Input = ({ className = '', ...props }) => (
+  <input className={`flex h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-300 ${className}`} {...props} />
+)
+const Avatar = ({ children, className = '' }) => (
+  <div className={`relative flex h-10 w-10 shrink-0 overflow-hidden rounded-full ${className}`}>{children}</div>
+)
+// Removed AvatarImage to always use initials
+const AvatarFallback = ({ children, className = '' }) => (
+  <div className={`flex h-full w-full items-center justify-center rounded-full bg-gray-200 ${className}`}>{children}</div>
+)
 
 const AdminChat = () => {
   const { user, logout } = useAuth()
@@ -12,18 +32,20 @@ const AdminChat = () => {
   const [userSearch, setUserSearch] = useState('')
   const [adminMsgText, setAdminMsgText] = useState('')
   const [users, setUsers] = useState([])
+  const activeUser = users.find(u => String(u._id) === String(activeChatUserId))
+  const initialsFromEmail = (email) => {
+    if (!email) return 'NA'
+    const name = String(email).split('@')[0]
+    return name.slice(0, 2).toUpperCase()
+  }
 
-  // Load recent chats and users
   useEffect(() => {
     fetchRecent((list) => setRecentChats(list))
-    // Load users from localStorage or fetch from API
     const loadUsers = async () => {
       try {
         const token = localStorage.getItem('kin_auth') ? JSON.parse(localStorage.getItem('kin_auth')).token : null
         if (token) {
-          const response = await apiFetch('/api/users', {
-            headers: { 'Authorization': `Bearer ${token}` }
-          })
+          const response = await apiFetch('/api/users', { headers: { 'Authorization': `Bearer ${token}` } })
           if (!response.ok) return
           const contentType = response.headers.get('content-type') || ''
           if (!contentType.includes('application/json')) return
@@ -37,14 +59,10 @@ const AdminChat = () => {
     loadUsers()
   }, [fetchRecent])
 
-  // Load selected user's thread when a user is chosen
   useEffect(() => {
-    if (activeChatUserId) {
-      fetchThread(activeChatUserId, undefined, { limit: 20 })
-    }
+    if (activeChatUserId) fetchThread(activeChatUserId, undefined, { limit: 20 })
   }, [activeChatUserId, fetchThread])
 
-  // Access control
   if (!user || user.role !== 'admin') {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
@@ -54,12 +72,7 @@ const AdminChat = () => {
           </div>
           <h2 className="text-2xl font-semibold text-gray-900 mb-2">Access Denied</h2>
           <p className="text-gray-600 mb-4">You need admin privileges to access this page.</p>
-          <Link
-            to="/admin"
-            className="bg-gray-900 hover:bg-black text-white px-4 py-2 rounded-lg transition-colors"
-          >
-            Go Back
-          </Link>
+          <Link to="/admin" className="bg-gray-900 hover:bg-black text-white px-4 py-2 rounded-lg transition-colors">Go Back</Link>
         </div>
       </div>
     )
@@ -67,38 +80,21 @@ const AdminChat = () => {
 
   const messages = activeChatUserId ? (chatThreads[activeChatUserId] || []) : []
 
-  // Merge all users with recent chat data
   const mergedUsers = users.map(u => {
     const rc = recentChats.find(rc => rc.userId === String(u._id))
-    return {
-      userId: String(u._id),
-      username: u.username,
-      email: u.email,
-      lastText: rc?.lastText || '',
-      lastFrom: rc?.lastFrom || '',
-      ts: rc?.ts || 0,
-    }
+    return { userId: String(u._id), username: u.username, email: u.email, lastText: rc?.lastText || '', lastFrom: rc?.lastFrom || '', ts: rc?.ts || 0 }
   }).filter(m => {
     if (!userSearch) return true
     const q = userSearch.toLowerCase()
-    return (
-      (m.username || '').toLowerCase().includes(q) ||
-      (m.email || '').toLowerCase().includes(q) ||
-      (m.userId || '').toLowerCase().includes(q) ||
-      (m.lastText || '').toLowerCase().includes(q)
-    )
+    return ((m.username || '').toLowerCase().includes(q) || (m.email || '').toLowerCase().includes(q) || (m.userId || '').toLowerCase().includes(q) || (m.lastText || '').toLowerCase().includes(q))
   }).sort((a, b) => (b.ts || 0) - (a.ts || 0))
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
       <nav className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-50">
         <div className="px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Link
-              to="/admin"
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
-            >
+            <Link to="/admin" className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors">
               <ArrowLeft className="w-5 h-5" />
               <span>Back to Dashboard</span>
             </Link>
@@ -106,150 +102,107 @@ const AdminChat = () => {
             <h1 className="text-xl font-semibold text-gray-900">Admin Chat</h1>
           </div>
           <div className="flex items-center space-x-4">
-            <div className="text-sm text-gray-600">Welcome, {user?.email ? user.email.split('@')[0] : 'Admin'}</div>
-            <button
-              onClick={logout}
-              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm transition-colors"
-            >
-              Logout
-            </button>
+            <div className="text-sm text-gray-600">{user?.email ? user.email.split('@')[0] : 'Admin'}</div>
+            <button onClick={logout} className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm transition-colors">Logout</button>
           </div>
         </div>
       </nav>
-      
-      <div className="pt-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[80vh]">
-            {/* Users Sidebar */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-              <div className="p-4 border-b border-gray-200 bg-white space-y-3">
-                <div className="font-medium text-gray-900 flex items-center gap-2">
-                  <Users className="w-5 h-5" />
-                  Users ({mergedUsers.length})
-                </div>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <input
-                    value={userSearch}
-                    onChange={(e) => setUserSearch(e.target.value)}
-                    placeholder="Search users..."
-                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-xl text-sm bg-white focus:bg-white focus:border-gray-400 focus:ring-2 focus:ring-gray-200 transition-all duration-200 placeholder-gray-400 text-gray-900"
-                  />
-                </div>
-              </div>
-              <div className="h-[calc(80vh-140px)] overflow-y-auto divide-y divide-gray-100 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-                {mergedUsers.length === 0 ? (
-                  <div className="p-4 text-sm text-gray-500 text-center">No users found</div>
-                ) : (
-                  mergedUsers.map((c) => (
-                    <button
-                      key={c.userId}
-                      onClick={() => { setActiveChatUserId(c.userId); fetchThread(c.userId, undefined, { limit: 20 }) }}
-                      className={`w-full text-left p-4 hover:bg-gray-50 transition-all duration-200 ${
-                        activeChatUserId === c.userId 
-                          ? 'bg-blue-50 border-r-2 border-blue-600' 
-                          : 'hover:bg-gray-50'
-                      }`}
-                    >
-                      <div className="text-sm font-medium text-gray-900">{c.username || c.email || c.userId}</div>
-                      <div className="text-xs text-gray-500 truncate">{c.email}</div>
-                      {c.lastText && (
-                        <div className="text-xs text-gray-500 truncate mt-1">
-                          {c.lastFrom === 'admin' ? 'You: ' : ''}{c.lastText}
-                        </div>
-                      )}
-                    </button>
-                  ))
-                )}
-              </div>
-            </div>
 
-            {/* Chat Area */}
-            <div className="lg:col-span-3 bg-white rounded-2xl shadow-sm border border-gray-200 flex flex-col overflow-hidden">
-              <div className="p-4 border-b border-gray-200 bg-white flex items-center justify-between flex-shrink-0">
-                <span className="font-medium text-gray-900">
-                  {activeChatUserId ? `Chat with ${activeChatUserId}` : 'Select a conversation'}
-                </span>
-                {activeChatUserId && (
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                    <span className="text-xs text-gray-500">User online</span>
-                  </div>
-                )}
-              </div>
-              
-              <div className="flex-1 p-4 overflow-y-auto space-y-3 h-[calc(80vh-200px)] bg-white scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-                {(!activeChatUserId || messages.length === 0) && (
-                  <div className="text-center py-12">
-                    <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center border border-gray-200">
-                      <MessageSquare className="w-8 h-8 text-gray-500" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                      {!activeChatUserId ? 'Choose a user to start chatting' : 'No messages yet'}
-                    </h3>
-                    <p className="text-gray-600">
-                      {!activeChatUserId ? 'Select a user from the left to begin a conversation' : 'Start the conversation by sending a message'}
-                    </p>
-                  </div>
-                )}
-                
-                {messages.map((m, idx) => (
-                  <div key={idx} className={`flex ${m.from === 'admin' ? 'justify-end' : 'justify-start'} animate-fadeIn`}>
-                    <div className={`px-4 py-3 rounded-2xl text-sm max-w-[70%] shadow-sm transition-all duration-200 ${
-                      m.from === 'admin' 
-                        ? 'bg-gray-900 text-white rounded-br-md border border-gray-900' 
-                        : 'bg-gray-100 border border-gray-200 text-gray-900 rounded-bl-md'
-                    }`}>
-                      {m.text}
-                    </div>
-                  </div>
-                ))}
-                
-                {activeChatUserId && typingState[activeChatUserId]?.from === 'user' && typingState[activeChatUserId]?.isTyping && (
-                  <div className="flex justify-start animate-fadeIn">
-                    <div className="bg-gray-100 border border-gray-200 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
-                      <div className="flex space-x-1">
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-              
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault()
-                  if (!activeChatUserId) return
-                  const t = adminMsgText.trim()
-                  if (!t) return
-                  adminSendMessage(activeChatUserId, t)
-                  setAdminMsgText('')
-                }}
-                className="p-4 border-t border-gray-200 bg-white flex-shrink-0"
-              >
-                <div className="flex items-center gap-3">
-                  <input
-                    value={adminMsgText}
-                    onChange={(e) => setAdminMsgText(e.target.value)}
-                    onFocus={() => activeChatUserId && setTyping(true, activeChatUserId)}
-                    onBlur={() => activeChatUserId && setTyping(false, activeChatUserId)}
-                    placeholder={activeChatUserId ? 'Type a message...' : 'Select a conversation'}
-                    disabled={!activeChatUserId}
-                    className="flex-1 border border-gray-300 rounded-xl px-4 py-3 text-sm bg-white focus:bg-white focus:border-gray-400 focus:ring-2 focus:ring-gray-200 transition-all duration-200 placeholder-gray-400 text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                  />
-                  <button 
-                    disabled={!activeChatUserId} 
-                    className="bg-gray-900 hover:bg-black text-white px-6 py-3 rounded-xl font-medium shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-gray-900 flex items-center gap-2"
-                  >
-                    <Send className="w-4 h-4" />
-                    Send
-                  </button>
-                </div>
-              </form>
+      <div className="pt-20 h-screen flex">
+        {/* Sidebar */}
+        <div className="w-80 sidebar-bg border-r border-custom flex flex-col" style={{backgroundColor:'#1a1a1a'}}>
+          <style>{`.sidebar-text{color:#e5e5e5}.sidebar-muted{color:#a3a3a3}.sidebar-hover:hover{background-color:#2a2a2a}.sidebar-active{background-color:#2a2a2a;border-right:2px solid #f97316}.border-custom{border-color:#e5e7eb}`}</style>
+          <div className="p-6 border-b border-custom">
+            <div className="flex items-center justify-between mb-4">
+              <div className="text-xl font-semibold sidebar-text">Conversations</div>
+              <Button variant="ghost" size="icon" className="sidebar-text sidebar-hover"><MoreVertical className="h-5 w-5" /></Button>
+            </div>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 sidebar-muted h-4 w-4" />
+              <Input placeholder="Search..." value={userSearch} onChange={(e)=>setUserSearch(e.target.value)} className="pl-10 bg-white" />
             </div>
           </div>
+          <div className="flex-1 overflow-y-auto">
+            {mergedUsers.map((c) => (
+              <div key={c.userId} onClick={()=>{ setActiveChatUserId(c.userId); fetchThread(c.userId, undefined, { limit: 20 }) }} className={`p-4 sidebar-hover cursor-pointer transition-colors ${activeChatUserId===c.userId ? 'sidebar-active':''}`}>
+                <div className="flex items-center space-x-3">
+                  <Avatar className="h-12 w-12">
+                    <AvatarFallback className="bg-orange-500 text-white">{initialsFromEmail(c.email || c.username || c.userId)}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium sidebar-text truncate">{c.username || c.email || c.userId}</p>
+                      <span className="text-xs sidebar-muted">{c.ts ? new Date(c.ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : ''}</span>
+                    </div>
+                    <p className="text-sm sidebar-muted truncate">{c.lastFrom==='admin' ? 'You: ' : ''}{c.lastText || 'No messages yet'}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+            {mergedUsers.length===0 && (<div className="p-4 text-sm sidebar-muted">No users found</div>)}
+          </div>
+        </div>
+
+        {/* Main Chat Area */}
+        <div className="flex-1 flex flex-col">
+          <div className="bg-white border-b border-custom p-4 flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <Avatar className="h-10 w-10">
+                <AvatarFallback className="bg-orange-500 text-white">{initialsFromEmail(activeUser?.email)}</AvatarFallback>
+              </Avatar>
+              <div>
+                <div className="font-semibold text-gray-900">{activeChatUserId ? `User ${activeChatUserId}` : 'Select a conversation'}</div>
+                {activeChatUserId && (
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span className="text-sm text-gray-500">Active now</span>
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center space-x-2"></div>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-white">
+            {(!activeChatUserId || messages.length===0) && (
+              <div className="text-center py-12">
+                <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center border border-gray-200">
+                  <MessageSquare className="w-8 h-8 text-gray-500" />
+                </div>
+                <div className="text-lg font-semibold text-gray-900 mb-2">{!activeChatUserId ? 'Choose a user to start chatting' : 'No messages yet'}</div>
+                <div className="text-gray-600">{!activeChatUserId ? 'Select a user from the left to begin a conversation' : 'Start the conversation by sending a message'}</div>
+              </div>
+            )}
+
+            {messages.map((m, idx) => (
+              <div key={idx} className={`flex ${m.from === 'admin' ? 'justify-end' : 'justify-start'}`}>
+                <div className={`p-4 rounded-lg shadow-sm transition-shadow max-w-xs lg:max-w-md ${m.from==='admin' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'}`}>
+                  <div className="text-sm leading-relaxed">{m.text}</div>
+                </div>
+              </div>
+            ))}
+
+            {activeChatUserId && typingState[activeChatUserId]?.from === 'user' && typingState[activeChatUserId]?.isTyping && (
+              <div className="flex justify-start">
+                <div className="bg-gray-100 rounded-lg px-4 py-3">
+                  <div className="flex space-x-1">
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <form onSubmit={(e)=>{ e.preventDefault(); if (!activeChatUserId) return; const t = adminMsgText.trim(); if(!t) return; adminSendMessage(activeChatUserId, t); setAdminMsgText('') }} className="border-t border-custom p-4 bg-white">
+            <div className="flex items-center space-x-2">
+              <div className="flex-1 relative">
+                <Input value={adminMsgText} onChange={(e)=>setAdminMsgText(e.target.value)} onFocus={()=>activeChatUserId && setTyping(true, activeChatUserId)} onBlur={()=>activeChatUserId && setTyping(false, activeChatUserId)} placeholder={activeChatUserId ? 'Type your message...' : 'Select a conversation'} />
+              </div>
+              <Button type="submit" disabled={!activeChatUserId} className="shadow-lg hover:shadow-xl transition-all duration-200 bg-orange-500 text-white" size="icon"><Send className="h-4 w-4" /></Button>
+            </div>
+          </form>
         </div>
       </div>
     </div>

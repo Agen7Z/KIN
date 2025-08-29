@@ -9,8 +9,12 @@ const Chat = () => {
   const [loading, setLoading] = useState(true)
   const [text, setText] = useState('')
   const listRef = useRef(null)
-  const topSentinelRef = useRef(null)
   const [oldestLoadedTs, setOldestLoadedTs] = useState(null)
+  const initialsFromEmail = (email) => {
+    if (!email) return 'NA'
+    const name = String(email).split('@')[0]
+    return name.slice(0, 2).toUpperCase()
+  }
 
   const myUserId = user?._id || user?.id
   const messages = useMemo(() => chatThreads[myUserId] || [], [chatThreads, myUserId])
@@ -75,71 +79,39 @@ const Chat = () => {
       <NavBar />
       <div className="pt-16 h-screen flex flex-col">
         <div className="max-w-6xl mx-auto w-full h-full flex flex-col px-4 sm:px-6 lg:px-8 py-8">
-          {/* Header */}
-          <div className="text-center mb-8 flex-shrink-0">
-            <div className="inline-flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl flex items-center justify-center shadow-lg">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                </svg>
+          {/* Simplified Header */}
+          <div className="mb-4 flex-shrink-0 flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="relative flex h-10 w-10 shrink-0 overflow-hidden rounded-full">
+                <div className="flex h-full w-full items-center justify-center rounded-full bg-orange-500 text-white">
+                  {initialsFromEmail(user?.email)}
+                </div>
               </div>
               <div>
-                <h1 className="text-5xl font-extrabold tracking-tight">
-                  <span className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 bg-clip-text text-transparent">
-                    Premium Support
-                  </span>
-                </h1>
+                <div className="font-semibold text-gray-900">Premium Support</div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span className="text-sm text-gray-500">Active now</span>
+                </div>
               </div>
             </div>
-            <p className="text-slate-600 text-lg font-medium">Connect with our admin team for personalized assistance</p>
-            <div className="w-24 h-1 bg-gradient-to-r from-slate-800 to-slate-600 rounded-full mx-auto mt-4"></div>
+            <div className="flex items-center space-x-2"></div>
           </div>
           
           {/* Chat Container */}
           <div className="bg-white border border-slate-200/80 rounded-3xl shadow-2xl shadow-black/10 flex flex-col flex-1 overflow-hidden backdrop-blur-sm">
-            {/* Chat Header */}
-            <div className="px-8 py-5 border-b border-slate-200/60 bg-gradient-to-r from-slate-50/80 to-white flex-shrink-0">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="relative">
-                    <div className="w-4 h-4 bg-emerald-500 rounded-full shadow-lg shadow-emerald-500/30"></div>
-                    <div className="absolute inset-0 w-4 h-4 bg-emerald-500 rounded-full animate-ping opacity-75"></div>
-                  </div>
-                  <div>
-                    <span className="font-bold text-slate-900 text-lg">Live Support</span>
-                    <div className="text-sm text-slate-600 font-medium">Admin Team • Online</div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-slate-400 rounded-full"></div>
-                  <div className="w-2 h-2 bg-slate-300 rounded-full"></div>
-                  <div className="w-2 h-2 bg-slate-200 rounded-full"></div>
-                </div>
-              </div>
-            </div>
+            {/* Removed top inner header for a cleaner single-pane layout */}
             
             {/* Messages Area */}
             <div
               ref={listRef}
-              className="flex-1 overflow-y-auto p-8 space-y-6 bg-gradient-to-b from-white via-slate-50/30 to-white relative scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent"
+              className="flex-1 overflow-y-auto p-6 space-y-4 bg-white"
               onScroll={() => { /* listener is set in effect */ }}
               onMouseEnter={() => setTyping(false)}
             >
-              {/* Background Pattern */}
-              <div className="absolute inset-0 opacity-5">
-                <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_1px_1px,_theme(colors.slate.400)_1px,_transparent_0)] bg-[size:40px_40px]"></div>
-              </div>
               
               {loading && (
-                <div className="flex items-center justify-center py-12 relative">
-                  <div className="bg-white rounded-2xl p-6 shadow-xl border border-slate-200/50">
-                    <div className="flex space-x-3">
-                      <div className="w-3 h-3 bg-gradient-to-r from-slate-600 to-slate-700 rounded-full animate-bounce"></div>
-                      <div className="w-3 h-3 bg-gradient-to-r from-slate-600 to-slate-700 rounded-full animate-bounce" style={{animationDelay: '0.15s'}}></div>
-                      <div className="w-3 h-3 bg-gradient-to-r from-slate-600 to-slate-700 rounded-full animate-bounce" style={{animationDelay: '0.3s'}}></div>
-                    </div>
-                  </div>
-                </div>
+                <div className="text-center text-sm text-gray-500">Loading...</div>
               )}
               
               {messages.length === 0 && !loading && (
