@@ -109,7 +109,7 @@ export const getProducts = async (req, res, next) => {
         
         const filter = { isActive: true };
         if (q) filter.name = { $regex: q, $options: "i" };
-        if (category) filter.category = category;
+        if (category && category !== 'all') filter.category = category;
         if (gender && gender !== 'all') {
             if (gender === 'unisex') {
                 filter.gender = 'unisex';
@@ -137,14 +137,22 @@ export const getProducts = async (req, res, next) => {
             sortOptions.createdAt = -1;
         }
 
+        // Get total count for pagination
+        const total = await Product.countDocuments(filter);
+        
         const products = await Product.find(filter)
             .sort(sortOptions)
-            .limit(limit)
-            .skip((page - 1) * limit);
+            .limit(Number(limit))
+            .skip((Number(page) - 1) * Number(limit));
         
-        // console.log(`Found ${products.length} products`);
+        // console.log(`Found ${products.length} products out of ${total} total`);
         
-        res.status(200).json({ status: "success", results: products.length, data: { products } });
+        res.status(200).json({ 
+            status: "success", 
+            results: products.length, 
+            total: total,
+            data: { products } 
+        });
     } catch (error) {
         next(error);
     }

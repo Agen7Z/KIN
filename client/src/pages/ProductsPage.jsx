@@ -1,54 +1,49 @@
 import React, { useEffect, useState, useCallback } from 'react'
-import { useParams, useLocation } from 'react-router-dom'
+import { useParams, useLocation, useNavigate } from 'react-router-dom'
 import NavBar from '../components/Common/NavBar'
 import ProductCard from '../components/Products/ProductCard'
 import { useCart } from '../hooks/useCart'
 import { useAuth } from '../hooks/useAuth'
 import apiFetch from '../utils/api'
 
-
-const useProducts = (category, gender) => {
+const useProducts = (category, gender, page, limit = 12) => {
   const [data, setData] = useState([])
   const [loading, setLoading] = useState(true)
-  const [hasMore, setHasMore] = useState(true)
-  const [page, setPage] = useState(1)
+  const [totalProducts, setTotalProducts] = useState(0)
+  const [totalPages, setTotalPages] = useState(0)
   
-  const loadMore = useCallback(async (pageNum = 1, append = false) => {
+  const loadProducts = useCallback(async () => {
     try {
+      setLoading(true)
       const params = new URLSearchParams()
-      if (category) params.set('category', category)
+      if (category && category !== 'all') params.set('category', category)
       if (gender && gender !== 'all') params.set('gender', gender)
-      params.set('page', pageNum)
-      params.set('limit', 50) // Increase limit to get more products
+      params.set('page', page)
+      params.set('limit', limit)
       
       const res = await apiFetch(`/api/products?${params.toString()}`)
       const json = await res.json()
-      const newProducts = json?.data?.products || []
+      const products = json?.data?.products || []
+      const total = json?.data?.total || 0
       
-      if (append) {
-        setData(prev => [...prev, ...newProducts])
-      } else {
-        setData(newProducts)
-      }
-      
-      // Check if there are more products
-      setHasMore(newProducts.length === 50)
-      setPage(pageNum)
-    } catch {
-      if (!append) setData([])
+      setData(products)
+      setTotalProducts(total)
+      setTotalPages(Math.ceil(total / limit))
+    } catch (error) {
+      console.error('Error loading products:', error)
+      setData([])
+      setTotalProducts(0)
+      setTotalPages(0)
     } finally {
       setLoading(false)
     }
-  }, [category, gender])
+  }, [category, gender, page, limit])
   
   useEffect(() => {
-    setPage(1)
-    setData([])
-    setHasMore(true)
-    loadMore(1, false)
-  }, [category, gender, loadMore])
+    loadProducts()
+  }, [loadProducts])
   
-  return { data, loading, hasMore, loadMore, page }
+  return { data, loading, totalProducts, totalPages, loadProducts }
 }
 
 const useTrending = () => {
@@ -73,6 +68,7 @@ const ProductsPage = () => {
   const { user } = useAuth()
   const { category } = useParams()
   const location = useLocation()
+  const navigate = useNavigate()
   
   // Extract gender from URL path
   const getGenderFromPath = useCallback(() => {
@@ -91,8 +87,10 @@ const ProductsPage = () => {
   const [selectedCollections, setSelectedCollections] = useState([]) // ['new','trending','signature']
   const [sortBy, setSortBy] = useState('Featured')
   const [selectedGender, setSelectedGender] = useState(getGenderFromPath())
+  const [currentPage, setCurrentPage] = useState(1)
+  const [selectedCategory, setSelectedCategory] = useState(category || 'all')
   
-  const { data: products, loading: productsLoading, hasMore, loadMore, page } = useProducts(category, selectedGender)
+  const { data: products, loading: productsLoading, totalProducts, totalPages } = useProducts(selectedCategory, selectedGender, currentPage, 12)
   const trendingProducts = useTrending()
   
   // Update selectedGender when URL changes
@@ -100,22 +98,33 @@ const ProductsPage = () => {
     setSelectedGender(getGenderFromPath())
   }, [getGenderFromPath])
   
+  // Update selectedCategory when URL changes
+  useEffect(() => {
+    setSelectedCategory(category || 'all')
+    setCurrentPage(1) // Reset to first page when category changes
+  }, [category])
+  
   const toggleArrayValue = (arr, value) => (
     arr.includes(value) ? arr.filter((v) => v !== value) : [...arr, value]
   )
   
   const handlePriceToggle = (value) => setSelectedPrices((prev) => toggleArrayValue(prev, value))
   const handleCollectionToggle = (value) => setSelectedCollections((prev) => toggleArrayValue(prev, value))
+  
+  // Handle category selection without navigation
+  const handleCategoryChange = (newCategory) => {
+    setSelectedCategory(newCategory)
+    setCurrentPage(1) // Reset to first page
+  }
+  
   const clearFilters = () => {
     setQuery('')
     setSelectedPrices([])
     setSelectedCollections([])
     setSortBy('Featured')
     setSelectedGender(getGenderFromPath())
-    // Reset pagination
-    if (loadMore) {
-      loadMore(1, false)
-    }
+    setSelectedCategory(category || 'all')
+    setCurrentPage(1)
   }
   
   const withinPrice = (price, range) => {
@@ -189,6 +198,60 @@ const ProductsPage = () => {
     if (gender === 'women') return 'Women'
     if (gender === 'unisex') return 'Unisex'
     return category || 'Products'
+  }
+  
+  // Pagination functions
+  const goToPage = (pageNum) => {
+    setCurrentPage(pageNum)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+  
+  const goToNextPage = () => {
+    if (currentPage < totalPages) {
+      goToPage(currentPage + 1)
+    }
+  }
+  
+  const goToPrevPage = () => {
+    if (currentPage > 1) {
+      goToPage(currentPage - 1)
+    }
+  }
+  
+  // Generate page numbers for pagination
+  const getPageNumbers = () => {
+    const pages = []
+    const maxVisiblePages = 5
+    
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i)
+      }
+    } else {
+      if (currentPage <= 3) {
+        for (let i = 1; i <= 4; i++) {
+          pages.push(i)
+        }
+        pages.push('...')
+        pages.push(totalPages)
+      } else if (currentPage >= totalPages - 2) {
+        pages.push(1)
+        pages.push('...')
+        for (let i = totalPages - 3; i <= totalPages; i++) {
+          pages.push(i)
+        }
+      } else {
+        pages.push(1)
+        pages.push('...')
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          pages.push(i)
+        }
+        pages.push('...')
+        pages.push(totalPages)
+      }
+    }
+    
+    return pages
   }
   
   return (
@@ -311,15 +374,8 @@ const ProductsPage = () => {
                           type="radio" 
                           name="category"
                           className="sr-only peer" 
-                          checked={category === cat.value || (!category && cat.value === 'all')}
-                          onChange={() => {
-                            if (cat.value === 'all') {
-                              window.history.pushState({}, '', '/products')
-                            } else {
-                              window.history.pushState({}, '', `/products/${cat.value}`)
-                            }
-                            window.location.reload()
-                          }}
+                          checked={selectedCategory === cat.value}
+                          onChange={() => handleCategoryChange(cat.value)}
                         />
                         <div className="w-5 h-5 border-2 border-gray-300 peer-checked:border-gray-900 peer-checked:bg-gray-900 transition-all duration-200 relative">
                           <svg className="w-3 h-3 text-white absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-0 peer-checked:opacity-100" fill="currentColor" viewBox="0 0 20 20">
@@ -384,8 +440,13 @@ const ProductsPage = () => {
             <div className="flex justify-between items-center mb-8 pb-6 border-b border-gray-100">
               <div>
                 <p className="text-gray-600 font-medium">
-                  Showing <span className="text-gray-900">{sortedProducts.length}</span> of <span className="text-gray-900">{products.length}</span> products
+                  Showing <span className="text-gray-900">{sortedProducts.length}</span> of <span className="text-gray-900">{totalProducts}</span> products
                 </p>
+                {selectedCategory !== 'all' && (
+                  <p className="text-sm text-gray-500 mt-1">
+                    Category: <span className="font-medium capitalize">{selectedCategory}</span>
+                  </p>
+                )}
               </div>
               <div className="flex items-center gap-4">
                 <span className="text-sm text-gray-600 font-medium">Sort by:</span>
@@ -426,7 +487,7 @@ const ProductsPage = () => {
               ))}
               
               {/* Loading state */}
-              {productsLoading && page === 1 && (
+              {productsLoading && (
                 <div className="col-span-full text-center py-16">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
                   <p className="text-gray-500 text-lg">Loading products...</p>
@@ -434,35 +495,67 @@ const ProductsPage = () => {
               )}
               
               {/* If no products found */}
-              {!productsLoading && products.length === 0 && (
+              {!productsLoading && sortedProducts.length === 0 && (
                 <div className="col-span-full text-center py-16">
-                  <p className="text-gray-500 text-lg">No products found for {category || 'this category'}.</p>
+                  <p className="text-gray-500 text-lg">No products found for {selectedCategory !== 'all' ? selectedCategory : 'this category'}.</p>
                   <p className="text-gray-400 text-sm mt-2">Try adjusting your filters or check back later.</p>
                 </div>
               )}
             </div>
 
-            {/* Load More */}
-            {hasMore && (
-              <div className="text-center mt-12 pt-8 border-t border-gray-100">
-                <button 
-                  onClick={() => loadMore(page + 1, true)}
-                  disabled={productsLoading}
-                  className={`px-8 py-3 font-medium uppercase tracking-wider transition-colors duration-300 ${
-                    productsLoading 
-                      ? 'bg-gray-400 cursor-not-allowed text-white' 
-                      : 'bg-gray-900 text-white hover:bg-gray-700'
-                  }`}
-                >
-                  {productsLoading && page > 1 ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mx-auto mb-2"></div>
-                      Loading More...
-                    </>
-                  ) : (
-                    'Load More Products'
-                  )}
-                </button>
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="mt-12 pt-8 border-t border-gray-100">
+                <div className="flex items-center justify-center gap-2">
+                  {/* Previous Button */}
+                  <button
+                    onClick={goToPrevPage}
+                    disabled={currentPage === 1}
+                    className={`px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${
+                      currentPage === 1
+                        ? 'text-gray-400 cursor-not-allowed'
+                        : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
+                    }`}
+                  >
+                    Previous
+                  </button>
+                  
+                  {/* Page Numbers */}
+                  {getPageNumbers().map((pageNum, index) => (
+                    <button
+                      key={index}
+                      onClick={() => typeof pageNum === 'number' ? goToPage(pageNum) : null}
+                      disabled={pageNum === '...'}
+                      className={`px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${
+                        pageNum === '...'
+                          ? 'text-gray-400 cursor-default'
+                          : pageNum === currentPage
+                          ? 'bg-gray-900 text-white'
+                          : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  ))}
+                  
+                  {/* Next Button */}
+                  <button
+                    onClick={goToNextPage}
+                    disabled={currentPage === totalPages}
+                    className={`px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${
+                      currentPage === totalPages
+                        ? 'text-gray-400 cursor-not-allowed'
+                        : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
+                    }`}
+                  >
+                    Next
+                  </button>
+                </div>
+                
+                {/* Page Info */}
+                <div className="text-center mt-4 text-sm text-gray-500">
+                  Page {currentPage} of {totalPages}
+                </div>
               </div>
             )}
           </div>
