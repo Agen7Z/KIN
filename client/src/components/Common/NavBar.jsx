@@ -88,12 +88,12 @@ const NavBar = () => {
         </div>
       </div>
       {open && user && user.role !== 'admin' && (
-        <div className="absolute right-4 sm:right-6 lg:right-8 top-14 sm:top-16 z-30 w-80 max-w-[90vw] bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-2 bg-blue-600 text-white">
+        <div className="absolute right-4 sm:right-6 lg:right-8 top-14 sm:top-16 z-30 w-80 max-w-[90vw] bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden flex flex-col max-h-[70vh]">
+          <div className="flex items-center justify-between px-4 py-2 bg-blue-600 text-white flex-shrink-0">
             <span className="text-sm font-semibold">Recent notices</span>
             <button onClick={() => setOpen(false)} className="opacity-90 hover:opacity-100 text-sm">Close</button>
           </div>
-          <div className="max-h-80 overflow-auto">
+          <div className="overflow-y-auto flex-1">
             {loading ? (
               <div className="p-4 text-sm text-blue-700 bg-blue-50">Loading…</div>
             ) : (notices.length === 0 ? (
