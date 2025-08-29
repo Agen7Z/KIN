@@ -38,6 +38,12 @@ const AdminChat = () => {
     const name = String(email).split('@')[0]
     return name.slice(0, 2).toUpperCase()
   }
+  const extractName = (u) => {
+    if (!u) return ''
+    if (u.username) return u.username
+    if (u.email) return String(u.email).split('@')[0]
+    return String(u._id || '')
+  }
 
   useEffect(() => {
     fetchRecent((list) => setRecentChats(list))
@@ -130,7 +136,7 @@ const AdminChat = () => {
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
-                      <p className="text-sm font-medium text-[#121212] truncate">{c.username || c.email || c.userId}</p>
+                      <p className="text-sm font-medium text-[#121212] truncate">{c.username || (c.email ? String(c.email).split('@')[0] : c.userId)}</p>
                       <span className="text-xs text-gray-500">{c.ts ? new Date(c.ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : ''}</span>
                     </div>
                     <p className="text-sm text-gray-600 truncate">{c.lastFrom==='admin' ? 'You: ' : ''}{c.lastText || 'No messages yet'}</p>
@@ -150,7 +156,7 @@ const AdminChat = () => {
                 <AvatarFallback className="bg-[#121212] text-white">{initialsFromEmail(activeUser?.email)}</AvatarFallback>
               </Avatar>
               <div>
-                <div className="font-semibold text-[#121212]">{activeChatUserId ? `User ${activeChatUserId}` : 'Select a conversation'}</div>
+                <div className="font-semibold text-[#121212]">{activeChatUserId ? extractName(activeUser) : 'Select a conversation'}</div>
                 {activeChatUserId && (
                   <div className="flex items-center space-x-2">
                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
@@ -162,7 +168,7 @@ const AdminChat = () => {
             <div className="flex items-center space-x-2"></div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-white">
+          <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-white pb-24">
             {(!activeChatUserId || messages.length===0) && (
               <div className="text-center py-12">
                 <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center border border-gray-200">
@@ -194,10 +200,10 @@ const AdminChat = () => {
             )}
           </div>
 
-          <form onSubmit={(e)=>{ e.preventDefault(); if (!activeChatUserId) return; const t = adminMsgText.trim(); if(!t) return; adminSendMessage(activeChatUserId, t); setAdminMsgText('') }} className="border-t border-gray-200 p-4 bg-white">
+          <form onSubmit={(e)=>{ e.preventDefault(); if (!activeChatUserId) return; const t = adminMsgText.trim(); if(!t) return; adminSendMessage(activeChatUserId, t); setAdminMsgText('') }} className="border-t border-gray-200 p-4 bg-white mb-6">
             <div className="flex items-center space-x-2">
               <div className="flex-1 relative">
-                <Input value={adminMsgText} onChange={(e)=>setAdminMsgText(e.target.value)} onFocus={()=>activeChatUserId && setTyping(true, activeChatUserId)} onBlur={()=>activeChatUserId && setTyping(false, activeChatUserId)} placeholder={activeChatUserId ? 'Type your message...' : 'Select a conversation'} />
+                <Input value={adminMsgText} onChange={(e)=>setAdminMsgText(e.target.value)} onFocus={()=>activeChatUserId && setTyping(true, activeChatUserId)} onBlur={()=>activeChatUserId && setTyping(false, activeChatUserId)} placeholder={activeChatUserId ? 'Type a message...' : 'Select a conversation'} />
               </div>
               <Button type="submit" disabled={!activeChatUserId} className="shadow-lg hover:shadow-xl transition-all duration-200 bg-[#F14D4C] text-white" size="icon"><Send className="h-4 w-4" /></Button>
             </div>

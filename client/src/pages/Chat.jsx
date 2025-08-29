@@ -2,9 +2,9 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { useSocket } from '../context/SocketContext.jsx'
 import NavBar from '../components/Common/NavBar.jsx'
-import { Send, MessageSquare } from 'lucide-react'
+import { Send, MessageSquare, MoreVertical, Search } from 'lucide-react'
 
-// Inline UI primitives from admin chat
+// Shared UI primitives
 const Button = ({ children, variant = 'default', size = 'default', className = '', ...props }) => {
   const base = 'inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50'
   const variants = { default: 'bg-[#F14D4C] text-white hover:bg-[#e03d3d]', ghost: 'hover:bg-gray-100 text-gray-800' }
@@ -30,7 +30,7 @@ const Chat = () => {
   const [text, setText] = useState('')
   const listRef = useRef(null)
   const [oldestLoadedTs, setOldestLoadedTs] = useState(null)
-  
+
   const initialsFromEmail = (email) => {
     if (!email) return 'NA'
     const name = String(email).split('@')[0]
@@ -92,15 +92,45 @@ const Chat = () => {
     <div className="min-h-screen bg-white">
       <NavBar />
       <div className="pt-20 h-screen flex">
-        {/* Main Chat Area - Full Width */}
+        {/* Left Sidebar - single Admin */}
+        <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
+          <div className="p-6 border-b border-gray-200">
+            <div className="flex items-center justify-between mb-4">
+              <div className="text-xl font-semibold text-[#121212]">Messages</div>
+              <Button variant="ghost" size="icon" className="text-[#121212] hover:bg-gray-100"><MoreVertical className="h-5 w-5" /></Button>
+            </div>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input placeholder="Search..." className="pl-10 bg-white" disabled />
+            </div>
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            <div className={`p-4 bg-gray-100 border-r-2 border-orange-500`}>
+              <div className="flex items-center space-x-3">
+                <Avatar className="h-12 w-12">
+                  <AvatarFallback className="bg-[#121212] text-white">AD</AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium text-[#121212] truncate">admin</p>
+                    <span className="text-xs text-gray-500">Now</span>
+                  </div>
+                  <p className="text-sm text-gray-600 truncate">Premium Support</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Chat Area */}
         <div className="flex-1 flex flex-col">
           <div className="bg-white border-b border-gray-200 p-4 flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <Avatar className="h-10 w-10">
-                <AvatarFallback className="bg-[#121212] text-white">{initialsFromEmail(user?.email)}</AvatarFallback>
+                <AvatarFallback className="bg-[#121212] text-white">AD</AvatarFallback>
               </Avatar>
               <div>
-                <div className="font-semibold text-[#121212]">Premium Support</div>
+                <div className="font-semibold text-[#121212]">admin</div>
                 <div className="flex items-center space-x-2">
                   <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                   <span className="text-sm text-gray-500">Active now</span>
@@ -110,7 +140,7 @@ const Chat = () => {
             <div className="flex items-center space-x-2"></div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-white" ref={listRef}>
+          <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-white pb-24" ref={listRef}>
             {loading && (
               <div className="text-center text-sm text-gray-500">Loading...</div>
             )}
@@ -146,7 +176,7 @@ const Chat = () => {
             )}
           </div>
 
-          <form onSubmit={(e) => { e.preventDefault(); const t = text.trim(); if (!t) return; sendUserMessage(t); setText('') }} className="border-t border-gray-200 p-4 bg-white">
+          <form onSubmit={(e) => { e.preventDefault(); const t = text.trim(); if (!t) return; sendUserMessage(t); setText('') }} className="border-t border-gray-200 p-4 bg-white mb-6">
             <div className="flex items-center space-x-2">
               <div className="flex-1 relative">
                 <Input 
@@ -158,7 +188,7 @@ const Chat = () => {
                 />
               </div>
               <Button type="submit" disabled={!text.trim()} className="shadow-lg hover:shadow-xl transition-all duration-200" size="icon">
-                <Send className="h-4 h-4" />
+                <Send className="h-4 w-4" />
               </Button>
             </div>
           </form>
