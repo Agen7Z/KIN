@@ -24,13 +24,21 @@ const useProducts = (category, gender, page, limit = 12) => {
         
         const res = await apiFetch(`/api/products?${params.toString()}`)
         const json = await res.json()
+        console.log('API Response:', json) // Debug log
         const products = json?.data?.products || []
-        const total = json?.data?.total || 0
+        const total = json?.total || 0  // Fixed: total is at root level, not in data
         
 
         setData(products)
         setTotalProducts(total)
         setTotalPages(Math.ceil(total / limit))
+        console.log('Pagination Debug:', { 
+          productsCount: products.length, 
+          total, 
+          totalPages: Math.ceil(total / limit),
+          currentPage: page,
+          limit 
+        })
       } catch (error) {
         console.error('Error loading products:', error)
         setData([])
@@ -510,6 +518,7 @@ const ProductsPage = () => {
             </div>
 
             {/* Pagination */}
+            {console.log('Rendering pagination:', { totalPages, currentPage, totalProducts })}
             {totalPages > 1 && (
               <div className="mt-12 pt-8 border-t border-gray-100">
                 <div className="flex items-center justify-center gap-2">
