@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext.jsx'
 import { CartProvider } from './context/CartContext.jsx'
 import { ToastProvider } from './context/ToastContext.jsx'
+import { SocketProvider } from './context/SocketContext.jsx'
 import { useAuth } from './hooks/useAuth.js'
 import ScrollToTop from './components/Common/ScrollToTop.jsx'
 import KinnLoader from './components/Common/KinnLoader.jsx'
@@ -54,6 +55,7 @@ const App = () => {
       <AuthProvider>
         <CartProvider>
           <ToastProvider>
+          <SocketProvider>
           {/* Global initial overlay */}
           {initialGate && (
             <div className="fixed inset-0 z-[1000] bg-white flex items-center justify-center px-6">
@@ -79,6 +81,7 @@ const App = () => {
           </Routes>
           <CartDrawer />
           <Footer />
+          </SocketProvider>
           </ToastProvider>
         </CartProvider>
       </AuthProvider>

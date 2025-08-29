@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react'
 import apiFetch from '../utils/api'
-import { Package, Users, ShoppingCart, Plus, Trash2, Eye, Edit3, Home, DollarSign, TrendingUp, Star, Menu, X } from 'lucide-react'
+import { Package, Users, ShoppingCart, Plus, Trash2, Eye, Edit3, Home, Menu, X, Megaphone } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import ImageUpload from '../components/Admin/ImageUpload.jsx'
 import { useToast } from '../hooks/useToast'
@@ -24,6 +24,8 @@ const AdminDashboard = () => {
   const [productsPerPage] = useState(10)
   const [searchTerm, setSearchTerm] = useState('')
   const [filteredProducts, setFilteredProducts] = useState([])
+  const [noticeForm, setNoticeForm] = useState({ title: '', message: '' })
+  const [sendingNotice, setSendingNotice] = useState(false)
 
   // Safety function to ensure state is always an array
   const ensureArray = (value) => {
@@ -360,7 +362,8 @@ const AdminDashboard = () => {
     { id: 'products', label: 'Product List', icon: Package },
     { id: 'add-product', label: 'Add Product', icon: Plus },
     { id: 'users', label: 'Manage Users', icon: Users },
-    { id: 'orders', label: 'Orders', icon: ShoppingCart }
+    { id: 'orders', label: 'Orders', icon: ShoppingCart },
+    { id: 'notices', label: 'Send Notice', icon: Megaphone }
   ]
 
   // Ensure state is always arrays before rendering
@@ -1002,6 +1005,68 @@ const AdminDashboard = () => {
     </div>
   )
 
+  const renderNotices = () => (
+    <div className="space-y-6">
+      <h1 className="text-2xl font-bold text-gray-900">Send Notice</h1>
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 max-w-2xl">
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Title (optional)</label>
+            <input
+              value={noticeForm.title}
+              onChange={(e)=>setNoticeForm(f=>({...f,title:e.target.value}))}
+              placeholder="Announcement title"
+              className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Message</label>
+            <textarea
+              value={noticeForm.message}
+              onChange={(e)=>setNoticeForm(f=>({...f,message:e.target.value}))}
+              placeholder="Write the notice to broadcast to all users"
+              rows="4"
+              className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
+            />
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              disabled={sendingNotice}
+              onClick={async ()=>{
+                if(!noticeForm.message.trim()) { show('Notice message is required', { type:'warning' }); return }
+                try {
+                  setSendingNotice(true)
+                  const token = localStorage.getItem('kin_auth') ? JSON.parse(localStorage.getItem('kin_auth')).token : null
+                  const res = await apiFetch('/api/notices', {
+                    method: 'POST',
+                    headers: {
+                      'Authorization': `Bearer ${token}`,
+                      'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ title: noticeForm.title, message: noticeForm.message })
+                  })
+                  if(res.ok){
+                    setNoticeForm({ title: '', message: '' })
+                    show('Notice sent to all users', { type:'success' })
+                  } else {
+                    const err = await res.json().catch(()=>({}))
+                    show(err?.message || 'Failed to send notice', { type:'error' })
+                  }
+                } catch (e){
+                  show('Failed to send notice', { type:'error' })
+                } finally { setSendingNotice(false) }
+              }}
+              className={`font-medium py-3 px-6 rounded-lg transition-colors ${sendingNotice ? 'bg-gray-400 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
+            >
+              {sendingNotice ? 'Sending…' : 'Send Notice'}
+            </button>
+            <p className="text-sm text-gray-500">Notices auto-expire after 24 hours.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+
   const renderContent = () => {
     switch (activeSection) {
       case 'overview': return renderOverview()
@@ -1009,6 +1074,7 @@ const AdminDashboard = () => {
       case 'add-product': return renderAddProduct()
       case 'users': return renderUsers()
       case 'orders': return renderOrders()
+      case 'notices': return renderNotices()
       default: return renderOverview()
     }
   }

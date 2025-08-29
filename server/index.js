@@ -9,6 +9,7 @@ import authRoutes from "./routes/auth.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import productRoutes from "./routes/product.routes.js";
 import orderRoutes from "./routes/order.routes.js";
+import noticeRoutes from "./routes/notice.routes.js";
 import { notFound, errorHandler } from "./middlewares/error.middleware.js";
 import { protect } from "./middlewares/auth.middleware.js";
 import path from "path";
@@ -79,6 +80,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/orders", orderRoutes);
+app.use("/api/notices", noticeRoutes);
 
 // Test endpoint
 app.get("/api/test", (req, res) => {
@@ -153,6 +155,35 @@ app.use(errorHandler);
 const port = process.env.PORT || 4000;
 const server = app.listen(port, () => {
     // Server started successfully
+});
+
+// Initialize Socket.IO
+import { Server as SocketIOServer } from 'socket.io';
+const io = new SocketIOServer(server, {
+  cors: {
+    origin: (
+      [
+        'http://localhost:5173',
+        'http://localhost:3000',
+        'http://localhost:3001',
+        'http://localhost:4000',
+        'https://kin-mu.vercel.app',
+        'https://kinn.sangambakhunchhe.com.np',
+        process.env.CLIENT_URL
+      ].filter(Boolean)
+    ),
+    credentials: true,
+    methods: ['GET','POST','PUT','DELETE','PATCH','OPTIONS']
+  }
+});
+
+app.set('io', io);
+
+io.on('connection', (socket) => {
+  // Optionally, authenticate user via token sent in query/headers later
+  socket.on('disconnect', () => {
+    // client disconnected
+  });
 });
 
 // Handle unhandled promise rejections
